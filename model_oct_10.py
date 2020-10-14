@@ -6,6 +6,7 @@ import itertools
 import pprint
 import matplotlib.pyplot as plt
 from collections import OrderedDict
+import sympy
 # import esgame
 # import class_graphs2
 
@@ -28,7 +29,8 @@ class Simple_players:
     def move(self):
         """playの仕方、その１（混合戦略）"""
         return random.uniform(0,1) < self.p_defect
-        #比較文はTrue, Falseを返すことを使っている。PythonのルールでFalse = 0なので、以下の利得計算時に[0][0]になる利得行列の位置は（協力、協力）。つまり(False, False)がここではお互い協力の履歴となる。
+        # 比較文はTrue, Falseを返すことを使っている。Trueが戻ってくると、下記のようにDなので、[0, p_defect)までが裏切りを選ぶ確率の範囲
+        # PythonのルールでFalse = 0なので、以下の利得計算時に[0][0]になる利得行列の位置は（協力、協力）。つまり(False, False)がここではお互い協力の履歴となる。
     # def action(self, game):#delegation to belief
     #     """playの仕方、その２"""
     #     return self.belief.action(self, game)
@@ -51,19 +53,82 @@ class Simple_players:
         own_payoff_memory = [x[game.players.index(self)] for x in payoffs] #過去の全部の記憶（完全記憶）
         return own_payoff_memory
     '''update method'''
-    def p_update(self,oppopnet_payoff,own_payoff, beta):#これは未完成
+    def p_update(self,chosen_neighbor_index, oppopnet_payoff, own_payoff, beta):#これは未完成
         # beta = 10
         tmp = np.exp(-(oppopnet_payoff-own_payoff)*beta)
         # print(tmp)
         fermi_prob = 1/(1+tmp)
-        # ここの処理をまだ書いていない。
+        randb = random.random()
+        #分岐
+        if randb < fermi_prob:
+            self.p_defect = chosen_neighbor_index.p_defect
+            #自分自身のp_defectを変更する
+        else:
+            pass
         return self.p_defect #これでdefectを選ぶ確率が変更される。
 
-""""プレイヤーのオブジェクトを生成する。"""#９人生成
-player_list = list()
-for i in range(9):
-    tmp = Simple_players(0.5, players_id=i)
-    player_list.append(tmp)
+'''2人ゲーム、つまり２人のペアで行われる対戦インスタンスを作成するクラス'''
+class SimpleGame:#あるプレイヤーとあるプレイヤーの対戦を生成する。
+    def __init__(self, players, payoffmat):
+        #initialize instance attributes
+        self.players = players
+        self.payoffmat = payoffmat
+        self.history = [] #空の一次元リスト
+        self.opponents = {self.players[0]:self.players[1], self.players[1]:self.players[0]}
+        self.payoffs =[]
+        self.row_player_id = self.players[0].SPidNum
+        self.column_player_id = self.players[1].SPidNum
+
+    def get_each_player_id(self, player):
+        return self.players[self.get_players_index(player)].SPidNum
+
+    def get_players_id_pair(self):
+        return (self.row_player_id, self.column_player_id)
+
+    def get_players_index(self, player):#引数で指定したプレイヤーがself.players[0]のself.players[1]のどちらにはいっているかを返す。
+        return self.players.index(player)
+
+    def move_run(self, game_iter):
+        for _i in range(game_iter):#ここで繰り返す必要はない。かもしれないが、一応繰り返している。
+            newmoves = self.players[0].move(), self.players[1].move() #このselfはSimpleGame, moveの引数だとgameに相当する
+            # print("__________", newmoves)
+            self.history.append(newmoves) 
+            self.players[0].record(self)
+            self.players[1].record(self)
+
+    # def action_run(self, game_iter):
+    #     for _i in range(game_iter):#ここで繰り返す必要はない。かもしれないが、同上
+    #         newmoves = self.players[0].action(self), self.players[1].action(self) #このselfはSimpleGame, moveの引数だとgameに相当する
+    #         self.history.append(newmoves) 
+    #         self.players[0].record(self)
+    #         self.players[1].record(self)
+    
+    def get_total_payoff(self):#累積の利得の合計
+        it = iter(self.history)
+        # print(it)
+        # print("--------------------")
+        payoffs = [self.payoffmat[m1][m2] for (m1,m2) in it]
+        row_payoff = [x[0] for x in payoffs]
+        column_payoff = [x[1] for x in payoffs]
+        '''二次元配列なのでpayoffmat[0][0]で1行１列目の利得、例：PAYOFFMAT = [[(3,3),(0,5)], [(5,0),(1,1)]]'''
+        total_row_payoff = sum(row_payoff)
+        total_column_payoff = sum(column_payoff)
+        return {self.players[0] : total_row_payoff, self.players[1] : total_column_payoff} 
+    
+    def average_payoff(self):
+        it = iter(self.history)
+        payoffs = [self.payoffmat[m1][m2] for (m1,m2) in it]
+        row_payoff = [x[0] for x in payoffs]
+        column_payoff = [x[1] for x in payoffs]
+        '''二次元配列なのでpayoffmat[0][0]で1行１列目の利得、例：PAYOFFMAT = [[(3,3),(0,5)], [(5,0),(1,1)]]'''
+        return {self.players[0] : np.mean(row_payoff), self.players[1] : np.mean(column_payoff)} 
+
+    def get_last_move(self, player):#指定したプレイヤーのラストムーブを取得する。
+        if self.history:
+            last_move = self.history[-1][self.players.index(player)] #historyの最後の要素（タプル）が２個の要素からなっているので、それを[player]のインデクスで指定する。
+        else:
+            last_move = None
+        return last_move
 
 '''ネットワークを作るクラス、完全グラフ、直線、正方格子'''
 
@@ -225,15 +290,57 @@ for j in range(len(nodes_list)):
     all_neighbors_list.append(neighbors_of_a_player)
 # print("____________", all_neighbors_list)
 
-"""与えられた正方格子上の全プレイヤーが、ゲームを規定の回数だけ繰り返す。"""
+print('各ノードの隣人のリスト=', all_neighbors_list)
+# print(type(all_neighbors_list))
+
+"""与えられた正方格子上に配置された全プレイヤーが、隣接する各プレイヤーとゲームを規定の回数だけ繰り返し、それを隣接するプレイヤー全員と行なう。"""
 """現在は自分自身との対戦は無い。枝リストに着目して対戦を回す。"""
-PAYOFFMAT = [[(3,3),(0,5)], [(5,0),(1,1)]] #ゲームの利得行列
-number_of_repetition = 2 #繰り返し回数
+PAYOFFMAT = [[(3,3),(0,5)], [(5,0),(1,1)]] #ゲームの利得行列（囚人のジレンマ）
+# PAYOFFMAT = [[(3,3),(0,0)], [(0,0),(1,1)]] #ゲームの利得行列（コーディネーションゲーム）
+
+number_of_repetition = 1 #規定の繰り返し回数
+
+print('利得行列', PAYOFFMAT)
+print('隣接ペアとの繰り返し対戦回数', number_of_repetition)
+
+# rA = PAYOFFMAT[0][0][0] #CC
+# rB = PAYOFFMAT[1][0][0] #DC
+# rC = PAYOFFMAT[0][1][0] #CD
+# rD = PAYOFFMAT[1][1][0] #DD
+# print("行プレイヤーの利得(CC,DC,CD,DD)=", rA,rB,rC,rD)
+
+# Cp = sympy.Symbol('Cp')
+# ep1c = Cp*rA+(1-Cp)*rC
+# # print(ep1c.subs([(rA, rA), (rB, rB)]))
+# ep1d = Cp*rB+(1-Cp)*rD
+# # print(ep1d.subs([(rC, rC), (rD, rD)]))
+# print("列プレイヤーの混ぜ=", sympy.solve(ep1c-ep1d))
+
+# Ca = PAYOFFMAT[0][0][1] #CC
+# Cb = PAYOFFMAT[1][0][1] #DC
+# Cc = PAYOFFMAT[0][1][1] #CD
+# Cd = PAYOFFMAT[1][1][1] #DD
+# print("列プレイヤーの利得(CC,DC,CD,DD)=", Ca,Cb,Cc,Cd)
+
+# Rp = sympy.Symbol('Rp')
+# ep2c = Rp*Ca+(1-Rp)*Cb
+# # print(ep2c.subs([(Ca, Ca), (Cb, Cb)]))
+# ep2d = Rp*Cc+(1-Rp)*Cd
+# # print(ep2d.subs([(Cc, Cc), (Cd, Cd)]))
+# print("行プレイヤーの混ぜ=", sympy.solve(ep2c-ep2d))
+
+""""プレイヤーのオブジェクトを生成する。"""
+player_list = list()
+for i in range(9):#９人生成
+    p = random.random()
+    # p = 1#p=1を与えている、つまり確率１でDを選ぶ。
+    tmp = Simple_players(p, players_id=i) 
+    player_list.append(tmp)
 
 print('プレイヤーオブジェクトのリスト=', player_list)
-print(type(player_list))
-print('各ノードの隣人のリスト=', all_neighbors_list)
-print(type(all_neighbors_list))
+# print(type(player_list))
+
+"""上で作った正方格子のネットワーク上にプレイヤーオブジェクトを配置する"""
 # print(nx.enumerate_all_cliques(GGraph))
 # list(nx.enumerate_all_cliques(GGraph))
 # print(GGraph.edges(GGnodes[0][0]))
@@ -242,6 +349,7 @@ print(type(all_neighbors_list))
 # print(list(nx.enumerate_all_cliques(G)))
 # print(list(filter(lambda x: len(x) > 1, nx.enumerate_all_cliques(G))))
 
+'''eda_listとは隣人リストを隣接関係として行列で表記したもの'''
 #eda_list = [[len(nodes_list)][len(nodes_list)]]
 eda_list = [[0 for i in range(len(nodes_list))] for j in range(len(nodes_list))] #node_list X node_list の２次元配列が返ってくる。
 #print(eda_list)
@@ -267,79 +375,17 @@ total_payoff_table = [[0 for i in range(len(nodes_list))] for j in range(len(nod
 
 '''ここまででプレイヤーを生成し、それをネットワーク上に配置しした'''
 
-'''2人ゲーム、つまり２人のペアで行われる対戦インスタンスを作成するクラス'''
-class SimpleGame:#あるプレイヤーとあるプレイヤーの対戦を生成する。
-    def __init__(self, players, payoffmat):
-        #initialize instance attributes
-        self.players = players
-        self.payoffmat = payoffmat
-        self.history = [] #空の一次元リスト
-        self.opponents = {self.players[0]:self.players[1], self.players[1]:self.players[0]}
-        self.payoffs =[]
-        self.row_player_id = self.players[0].SPidNum
-        self.column_player_id = self.players[1].SPidNum
-
-    def get_each_player_id(self, player):
-        return self.players[self.get_players_index(player)].SPidNum
-
-    def get_players_id_pair(self):
-        return (self.row_player_id, self.column_player_id)
-
-    def get_players_index(self, player):#引数で指定したプレイヤーがself.players[0]のself.players[1]のどちらにはいっているかを返す。
-        return self.players.index(player)
-
-    def move_run(self, game_iter):
-        for _i in range(game_iter):#ここで繰り返す必要はない。かもしれないが、一応繰り返している。
-            newmoves = self.players[0].move(), self.players[1].move() #このselfはSimpleGame, moveの引数だとgameに相当する
-            # print("__________", newmoves)
-            self.history.append(newmoves) 
-            self.players[0].record(self)
-            self.players[1].record(self)
-
-    # def action_run(self, game_iter):
-    #     for _i in range(game_iter):#ここで繰り返す必要はない。かもしれないが、同上
-    #         newmoves = self.players[0].action(self), self.players[1].action(self) #このselfはSimpleGame, moveの引数だとgameに相当する
-    #         self.history.append(newmoves) 
-    #         self.players[0].record(self)
-    #         self.players[1].record(self)
-    
-    def get_total_payoff(self):#累積の利得の合計
-        it = iter(self.history)
-        # print(it)
-        # print("--------------------")
-        payoffs = [self.payoffmat[m1][m2] for (m1,m2) in it]
-        row_payoff = [x[0] for x in payoffs]
-        column_payoff = [x[1] for x in payoffs]
-        '''二次元配列なのでpayoffmat[0][0]で1行１列目の利得、例：PAYOFFMAT = [[(3,3),(0,5)], [(5,0),(1,1)]]'''
-        total_row_payoff = sum(row_payoff)
-        total_column_payoff = sum(column_payoff)
-        return {self.players[0] : total_row_payoff, self.players[1] : total_column_payoff} 
-    
-    def average_payoff(self):
-        it = iter(self.history)
-        payoffs = [self.payoffmat[m1][m2] for (m1,m2) in it]
-        row_payoff = [x[0] for x in payoffs]
-        column_payoff = [x[1] for x in payoffs]
-        '''二次元配列なのでpayoffmat[0][0]で1行１列目の利得、例：PAYOFFMAT = [[(3,3),(0,5)], [(5,0),(1,1)]]'''
-        return {self.players[0] : np.mean(row_payoff), self.players[1] : np.mean(column_payoff)} 
-
-    def get_last_move(self, player):#指定したプレイヤーのラストムーブを取得する。
-        if self.history:
-            last_move = self.history[-1][self.players.index(player)] #historyの最後の要素（タプル）が２個の要素からなっているので、それを[player]のインデクスで指定する。
-        else:
-            last_move = None
-        return last_move
-
-
+"""ここからネットワーク上のゲーミングシミュレーション"""
+# 基本的にノードとプレイヤーのインデックスはk=kである。例）ノード０にいるプレイヤーのインデックスは０
 for i in range(len(player_list)):
     # print('test----', i)
     for j in range(len(player_list)):
         if eda_list[i][j] == 1:
-            print('対戦リスト_', i, j)#自分と対戦相手を表示している。
+            # print('対戦リスト_', i, j)#自分と対戦相手を表示している。
             #あるプレイヤーとあるプレイヤーの対戦を生成する。
             a_game = SimpleGame(players=(player_list[i], player_list[j]), payoffmat=PAYOFFMAT)
             #対戦を規定回数行なう。
-            a_game.move_run(game_iter=number_of_repetition) #onaji pair  de kurikaesu
+            a_game.move_run(game_iter=number_of_repetition) #この規定回数繰り返しとはラウンド一周中に同じ隣接ペアで何回繰り返すか、ラウンドは隣接ペアを一回りして終了する。
             
             #諸々の確認
             # print(a_game.history)#プレイの履歴を表示
@@ -374,18 +420,24 @@ print("ノード０のプレイヤーの得点=", sum(total_payoff_table[0])) #�
 '''この得点の合計とランダムに選んだ隣人の同じ合計と比較して、アップデート（行動の選択を変える）する'''
 #現在、updateはフェルミ関数で行っている。確率で戦略を変更する。
 
-'''とりあえず、隣人を０番に固定して、アップデートまでする作戦'''
+'''とりあえず一周してすべてのプレイヤーの全ての対戦終了後に、プレイヤーを０番に固定して０番のアップデートまでする作戦'''
 
-# print(all_neighbors_list[0])　#ノード０番にいるプレイヤーの隣人のリスト、ノード１とノード３が出る。
+# print(all_neighbors_list[0])#ノード０番にいるプレイヤー０の隣人のリスト、ノード１（プレイヤー１）とノード３（プレイヤー３）が出る。
 # print(total_payoff_table[1])
-# print(total_payoff_table[all_neighbors_list[0][0]])
-# print(total_payoff_table[all_neighbors_list[0][1]])
+# print(total_payoff_table[all_neighbors_list[0][0]])#ノード１（プレイヤー１）の得点
+# print(total_payoff_table[all_neighbors_list[0][1]])#ノード３（プレイヤー３）の得点
 
 #print(random.sample(all_neighbors_list[0], 1))
 x = random.sample(all_neighbors_list[0], 1) #隣人からランダムで１人選択する。リストで戻ってくる
 # print("------",x[0]) #選ばれた隣人のリストの要素は１個なので、０を指定すれば、選ばれた隣人のノード番号が得られる。
-all_neighbors_list[0].index(x[0])
+# print(type(x[0]))
+chosen_player_index = x[0]
+# print(player_list[chosen_player_index].p_defect)#ランダムに選ばれた隣人のp.defect
+
+# print(all_neighbors_list[0].index(x[0]))#これは、当該０の隣人の配列[1,3]（全プレイヤーの配列ではない）の中で何番目かを返してくる。
 chosen_neighbor_index = all_neighbors_list[0].index(x[0])
+# print(chosen_neighbor_index)#ランダムに選ばれた隣人の隣人配列内でのインデックス
+# print(player_list[chosen_neighbor_index].p_defect)
 oppopnet_payoff = sum(total_payoff_table[all_neighbors_list[0][chosen_neighbor_index]]) #ランダムに選ばれた隣人のペイオフ
 own_payoff = sum(total_payoff_table[0])
 # print(oppopnet_payoff, own_payoff)
@@ -397,21 +449,22 @@ tmp = np.exp(-(oppopnet_payoff-own_payoff)*beta)
 fermi_prob = 1/(1+tmp) #アップデートの確率
 print("フェルミ関数の値=", fermi_prob) 
 
-print("ノード０のD確率（更新前）=", player_list[0].p_defect)
-print('ノード１のD確率（更新前）=', player_list[1].p_defect)
+print("ノード０のPlayer０のD確率（更新前）=", player_list[0].p_defect)
+# print('選択された相手のD確率（更新前）=', player_list[chosen_player_index].p_defect)
 
 '''戦略の更新'''
 randb = random.random()
 #分岐
-'''ここのオーソドックスな書き方を知りたい
 if randb < fermi_prob:
+    player_list[0].p_defect = player_list[1].p_defect
     # player_list[0].p_defectを変更する
-'''
+else:
+    pass
 
 # 上がわかれば、fermi関数から更新までをプレイヤークラスのメソッドで行いたい。未完成
 # player_list[0].p_update(oppopnet_payoff, own_payoff)
 # print(player_list[0].p)
 
 # 更新後の確認
-# print(player_list[0].p_defect) 
-# print(player_list[1].p_defect)
+print("ノード０のPlayer０のD確率（更新後）=",player_list[0].p_defect) 
+# print('選ばれた相手のD確率（更新後）=',player_list[chosen_player_index].p_defect)
