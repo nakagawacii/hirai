@@ -337,7 +337,7 @@ for i in range(9):#９人生成
     tmp = Simple_players(p, players_id=i) 
     player_list.append(tmp)
 
-print('プレイヤーオブジェクトのリスト=', player_list)
+print('player_list（プレイヤーオブジェクトのリスト）=', player_list)
 # print(type(player_list))
 
 """上で作った正方格子のネットワーク上にプレイヤーオブジェクトを配置する"""
@@ -423,24 +423,32 @@ print("ノード０のプレイヤーの得点=", sum(total_payoff_table[0])) #�
 '''とりあえず一周してすべてのプレイヤーの全ての対戦終了後に、プレイヤーを０番に固定して０番のアップデートまでする作戦'''
 
 # print(all_neighbors_list[0])#ノード０番にいるプレイヤー０の隣人のリスト、ノード１（プレイヤー１）とノード３（プレイヤー３）が出る。
+print('1のD確率', player_list[1].p_defect)
+print('3のD確率', player_list[3].p_defect)
 # print(total_payoff_table[1])
 # print(total_payoff_table[all_neighbors_list[0][0]])#ノード１（プレイヤー１）の得点
 # print(total_payoff_table[all_neighbors_list[0][1]])#ノード３（プレイヤー３）の得点
 
 #print(random.sample(all_neighbors_list[0], 1))
-x = random.sample(all_neighbors_list[0], 1) #隣人からランダムで１人選択する。リストで戻ってくる
-# print("------",x[0]) #選ばれた隣人のリストの要素は１個なので、０を指定すれば、選ばれた隣人のノード番号が得られる。
+x = random.sample(all_neighbors_list[0], 1) #ノード０の隣人からランダムで１人選択する。リストで戻ってくる
+print("ランダムに選ばれたプレイヤー",x[0]) #選ばれた隣人のリストの要素は１個なので、０を指定すれば、選ばれた隣人のノード番号が得られる。
 # print(type(x[0]))
+# ノード番号はそのままプレイヤーのインデックスなので
 chosen_player_index = x[0]
-# print(player_list[chosen_player_index].p_defect)#ランダムに選ばれた隣人のp.defect
+print(type(chosen_player_index))
+print('--------error-------', player_list[x[0]].p_defect)
+print('--------error-------', player_list[chosen_player_index].p_defect)
+# print("ランダムに選ばれたプレイヤーのp.defect=", player_list[x[0]].p_defect)
 
-# print(all_neighbors_list[0].index(x[0]))#これは、当該０の隣人の配列[1,3]（全プレイヤーの配列ではない）の中で何番目かを返してくる。
+print('隣人行列リスト内でのインデックス',all_neighbors_list[0].index(x[0]))#これは、当該０の隣人の配列[1,3]（全プレイヤーの配列ではない）の中で何番目かを返してくる。
 chosen_neighbor_index = all_neighbors_list[0].index(x[0])
 # print(chosen_neighbor_index)#ランダムに選ばれた隣人の隣人配列内でのインデックス
-# print(player_list[chosen_neighbor_index].p_defect)
+print(type(chosen_neighbor_index))
+print('------試しにこれはエラーではない-------', player_list[chosen_neighbor_index].p_defect)
 oppopnet_payoff = sum(total_payoff_table[all_neighbors_list[0][chosen_neighbor_index]]) #ランダムに選ばれた隣人のペイオフ
+# print(oppopnet_payoff)
 own_payoff = sum(total_payoff_table[0])
-# print(oppopnet_payoff, own_payoff)
+# print(own_payoff)
 
 '''フェルミ関数'''
 beta = 10
@@ -456,7 +464,7 @@ print("ノード０のPlayer０のD確率（更新前）=", player_list[0].p_def
 randb = random.random()
 #分岐
 if randb < fermi_prob:
-    player_list[0].p_defect = player_list[1].p_defect
+    player_list[0].p_defect = player_list[chosen_player_index].p_defect
     # player_list[0].p_defectを変更する
 else:
     pass
