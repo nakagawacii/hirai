@@ -431,14 +431,22 @@ print('3のD確率', player_list[3].p_defect)
 
 #print(random.sample(all_neighbors_list[0], 1))
 x = random.sample(all_neighbors_list[0], 1) #ノード０の隣人からランダムで１人選択する。リストで戻ってくる
+y = x[0] #この代入が必要な理由？？？
 print("ランダムに選ばれたプレイヤー",x[0]) #選ばれた隣人のリストの要素は１個なので、０を指定すれば、選ばれた隣人のノード番号が得られる。
-# print(type(x[0]))
+print("x[0]の型", type(x[0]))
+print("x[0]を代入したyの型",type(y))
 # ノード番号はそのままプレイヤーのインデックスなので
-chosen_player_index = x[0]
-print(type(chosen_player_index))
+chosen_player_index = int(x[0])
+# print("x[0]を代入したchosen_player_indexの型", type(chosen_player_index))
+# chosen_player_index = int(y)#この型変換が必要らしい。
+# print("int(y)を代入したchosen_player_indexの型", type(chosen_player_index))
+# chosen_player_index = y
+# print("yを代入したchosen_player_indexの型", type(chosen_player_index))
 print('--------error-------', player_list[x[0]].p_defect)
 print('--------error-------', player_list[chosen_player_index].p_defect)
 # print("ランダムに選ばれたプレイヤーのp.defect=", player_list[x[0]].p_defect)
+
+
 
 print('隣人行列リスト内でのインデックス',all_neighbors_list[0].index(x[0]))#これは、当該０の隣人の配列[1,3]（全プレイヤーの配列ではない）の中で何番目かを返してくる。
 chosen_neighbor_index = all_neighbors_list[0].index(x[0])
