@@ -53,7 +53,7 @@ class Simple_players:
         own_payoff_memory = [x[game.players.index(self)] for x in payoffs] #過去の全部の記憶（完全記憶）
         return own_payoff_memory
     '''update method'''
-    def p_update(self,chosen_neighbor_index, oppopnet_payoff, own_payoff, beta):#これは未完成
+    def p_update(self,chosen_player_index, oppopnet_payoff, own_payoff, beta):#これは未完成
         # beta = 10
         tmp = np.exp(-(oppopnet_payoff-own_payoff)*beta)
         # print(tmp)
@@ -61,7 +61,7 @@ class Simple_players:
         randb = random.random()
         #分岐
         if randb < fermi_prob:
-            self.p_defect = chosen_neighbor_index.p_defect
+            self.p_defect = player_list[chosen_player_index].p_defect
             #自分自身のp_defectを変更する
         else:
             pass
@@ -420,7 +420,7 @@ print("ノード０のプレイヤーの得点=", sum(total_payoff_table[0])) #�
 '''この得点の合計とランダムに選んだ隣人の同じ合計と比較して、アップデート（行動の選択を変える）する'''
 #現在、updateはフェルミ関数で行っている。確率で戦略を変更する。
 
-'''とりあえず一周してすべてのプレイヤーの全ての対戦終了後に、プレイヤーを０番に固定して０番のアップデートまでする作戦'''
+'''とりあえず一周してすべてのプレイヤーの全ての対戦終了後に、プレイヤーを０番に固定して０番のアップデートまでする作戦
 
 # print(all_neighbors_list[0])#ノード０番にいるプレイヤー０の隣人のリスト、ノード１（プレイヤー１）とノード３（プレイヤー３）が出る。
 print('1のD確率', player_list[1].p_defect)
@@ -431,34 +431,32 @@ print('3のD確率', player_list[3].p_defect)
 
 #print(random.sample(all_neighbors_list[0], 1))
 x = random.sample(all_neighbors_list[0], 1) #ノード０の隣人からランダムで１人選択する。リストで戻ってくる
-y = x[0] #この代入が必要な理由？？？
+# y = x[0] #この代入が必要な理由？？？
 print("ランダムに選ばれたプレイヤー",x[0]) #選ばれた隣人のリストの要素は１個なので、０を指定すれば、選ばれた隣人のノード番号が得られる。
-print("x[0]の型", type(x[0]))
-print("x[0]を代入したyの型",type(y))
-# ノード番号はそのままプレイヤーのインデックスなので
+# print("x[0]の型", type(x[0]))
+# print("x[0]を代入したyの型",type(y))
+# ノード番号はそのままプレイヤーのインデックスなので, int型のx[0]はそのまま代入できそうだが、実際にはエラーがでるので、int(x[0])する。
 chosen_player_index = int(x[0])
 # print("x[0]を代入したchosen_player_indexの型", type(chosen_player_index))
 # chosen_player_index = int(y)#この型変換が必要らしい。
 # print("int(y)を代入したchosen_player_indexの型", type(chosen_player_index))
 # chosen_player_index = y
 # print("yを代入したchosen_player_indexの型", type(chosen_player_index))
-print('--------error-------', player_list[x[0]].p_defect)
-print('--------error-------', player_list[chosen_player_index].p_defect)
-# print("ランダムに選ばれたプレイヤーのp.defect=", player_list[x[0]].p_defect)
-
-
+# print('--------error-------', player_list[x[0]].p_defect)
+# print('--------error-------', player_list[chosen_player_index].p_defect)
+print("ランダムに選ばれたプレイヤーのp.defect=", player_list[chosen_player_index].p_defect)
 
 print('隣人行列リスト内でのインデックス',all_neighbors_list[0].index(x[0]))#これは、当該０の隣人の配列[1,3]（全プレイヤーの配列ではない）の中で何番目かを返してくる。
 chosen_neighbor_index = all_neighbors_list[0].index(x[0])
 # print(chosen_neighbor_index)#ランダムに選ばれた隣人の隣人配列内でのインデックス
-print(type(chosen_neighbor_index))
-print('------試しにこれはエラーではない-------', player_list[chosen_neighbor_index].p_defect)
+# print(type(chosen_neighbor_index))
+# print('------試しにこれはエラーではない-------', player_list[chosen_neighbor_index].p_defect)
 oppopnet_payoff = sum(total_payoff_table[all_neighbors_list[0][chosen_neighbor_index]]) #ランダムに選ばれた隣人のペイオフ
 # print(oppopnet_payoff)
 own_payoff = sum(total_payoff_table[0])
 # print(own_payoff)
 
-'''フェルミ関数'''
+#フェルミ関数
 beta = 10
 tmp = np.exp(-(oppopnet_payoff-own_payoff)*beta)
 # print(tmp)
@@ -468,7 +466,7 @@ print("フェルミ関数の値=", fermi_prob)
 print("ノード０のPlayer０のD確率（更新前）=", player_list[0].p_defect)
 # print('選択された相手のD確率（更新前）=', player_list[chosen_player_index].p_defect)
 
-'''戦略の更新'''
+# 戦略の更新
 randb = random.random()
 #分岐
 if randb < fermi_prob:
@@ -477,10 +475,41 @@ if randb < fermi_prob:
 else:
     pass
 
-# 上がわかれば、fermi関数から更新までをプレイヤークラスのメソッドで行いたい。未完成
-# player_list[0].p_update(oppopnet_payoff, own_payoff)
-# print(player_list[0].p)
-
 # 更新後の確認
 print("ノード０のPlayer０のD確率（更新後）=",player_list[0].p_defect) 
 # print('選ばれた相手のD確率（更新後）=',player_list[chosen_player_index].p_defect)
+
+作戦ここまで'''
+
+# # 上がわかれば、fermi関数から更新までをプレイヤークラスのメソッドで行いたい。未完成
+# player_list[0].p_update(chosen_player_index, oppopnet_payoff, own_payoff, beta=10)
+# print(player_list[0].p_defect)
+
+'''動的に変更されている。０が１を真似たとして、その０を３が真似るとして、３は１を真似た０の真似をしている。'''
+for i in range(len(player_list)):
+    print("ノード", i, "のPlayer", i, "の更新")
+    print("ノード", i, "のPlayer", i, "のD確率（更新前）=", player_list[i].p_defect)
+    # '''隣人の中から真似る相手の候補をランダムに選ぶ'''
+    x = random.sample(all_neighbors_list[i], 1)
+    chosen_player_index = int(x[0])
+    print("ランダムに選ばれたプレイヤー", chosen_player_index)
+    # '''自分とランダムに選んだプレイヤーの利得の差分を計算する。'''
+    neighbor_index_ofchosenplayer = all_neighbors_list[i].index(x[0])#これは、当該の隣人だけの配列（全プレイヤーの配列ではない）の中で何番目かを返してくる。
+    oppopnet_payoff = sum(total_payoff_table[all_neighbors_list[i][neighbor_index_ofchosenplayer]]) #ランダムに選ばれた隣人の総利得
+    own_payoff = sum(total_payoff_table[i])#自分の総利得
+    # '''フェルミ関数'''
+    beta = 10
+    tmp = np.exp(-(oppopnet_payoff-own_payoff)*beta)
+    # print(tmp)
+    fermi_prob = 1/(1+tmp) #アップデートの確率
+    print("フェルミ関数の値=", fermi_prob) 
+    # '''アップデート'''
+    randb = random.random()#サイコロはプレイヤーごとに振る。
+    #分岐
+    if randb < fermi_prob:
+        player_list[i].p_defect = player_list[chosen_player_index].p_defect
+        # player_list[0].p_defectを変更する
+    else:
+        pass
+    # 更新後の確認
+    print("ノード", i, "のPlayer", i, "のD確率（更新後）=",player_list[i].p_defect) 
