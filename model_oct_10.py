@@ -485,7 +485,18 @@ print("ノード０のPlayer０のD確率（更新後）=",player_list[0].p_defe
 # player_list[0].p_update(chosen_player_index, oppopnet_payoff, own_payoff, beta=10)
 # print(player_list[0].p_defect)
 
-'''動的に変更されている。０が１を真似たとして、その０を３が真似るとして、３は１を真似た０の真似をしている。'''
+#更新は同期更新で行なうとし、更新前のp_defectを格納する配列をつくる
+l = list()
+for i in range(len(player_list)):
+    # print(player_list[i])
+    # print(player_list[i].p_defect)
+    # present_p_defects.append(player_list[i].p_defect)
+    l.insert(i, player_list[i].p_defect)
+present_p_defects = tuple(l)
+print("D確率（更新前）一覧=",present_p_defects)
+
+# '''動的に変更されている。０が１を真似たとして、その０を３が真似るとして、３は１を真似た０の真似をしている。'''
+# 上記の理由により、同期更新で行なう。ここで動的というのは私的定義だが、公式定義では非同期の一種らしい。
 for i in range(len(player_list)):
     print("ノード", i, "のPlayer", i, "の更新")
     print("ノード", i, "のPlayer", i, "のD確率（更新前）=", player_list[i].p_defect)
@@ -507,9 +518,16 @@ for i in range(len(player_list)):
     randb = random.random()#サイコロはプレイヤーごとに振る。
     #分岐
     if randb < fermi_prob:
-        player_list[i].p_defect = player_list[chosen_player_index].p_defect
-        # player_list[0].p_defectを変更する
+        player_list[i].p_defect = present_p_defects[chosen_player_index]
+        # player_list[i].p_defect = player_list[chosen_player_index].p_defect
+        # ここでplayer_list[0].p_defectを変更すると動的変更となるため、これはペンディング
     else:
         pass
     # 更新後の確認
     print("ノード", i, "のPlayer", i, "のD確率（更新後）=",player_list[i].p_defect) 
+
+# 更新後のp_defectsの確認
+post_p_defects = list()
+for i in range(len(player_list)):
+    post_p_defects.insert(i, player_list[i].p_defect)
+print("D確率（更新後）一覧=", post_p_defects)
