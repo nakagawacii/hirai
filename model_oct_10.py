@@ -255,7 +255,7 @@ class seihou_koushi(object):
 
 '''正方格子を作る。'''
 #次数４で生成
-L=3 #最初に１辺のノード数を与える。L×Lの正方格子
+L=50 #最初に１辺のノード数を与える。L×Lの正方格子
 GGraph = seihou_koushi(L, False)
 #GGraph.seihou_koushi_4(L, False)
 # print(GGraph.get_nodes_list())
@@ -331,9 +331,9 @@ print('隣接ペアとの繰り返し対戦回数', number_of_repetition)
 
 """"プレイヤーのオブジェクトを生成する。"""
 player_list = list()
-for i in range(9):#９人生成
-    p = random.random()
-    # p = 1#p=1を与えている、つまり確率１でDを選ぶ。
+for i in range(2500):#ここでプレイヤー数を決める。実際は上の２５８行目のLの二乗。
+    # p = random.random()
+    p = 1#p=1を与えている、つまり確率１でDを選ぶ。
     tmp = Simple_players(p, players_id=i) 
     player_list.append(tmp)
 
