@@ -34,6 +34,9 @@ class Simple_players:
     # def action(self, game):#delegation to belief
     #     """playの仕方、その２"""
     #     return self.belief.action(self, game)
+    def init_move(self):
+        """"最初の一回はランダムでプレイする。という時に使う。"""
+        return random.uniform(0,1) < 0.5#現時点では、0.5を与えているが、インスタンス初期化時点でパラメータを与えるのもありだと思う。
     def record(self, game):
         self.games_played.append(game) #ゲームの記憶
         opponent = game.opponents[self] #辞書型からキーを使って取り出している。
@@ -87,14 +90,26 @@ class SimpleGame:#あるプレイヤーとあるプレイヤーの対戦を生�
 
     def get_players_index(self, player):#引数で指定したプレイヤーがself.players[0]のself.players[1]のどちらにはいっているかを返す。
         return self.players.index(player)
-
     def move_run(self, game_iter):
         for _i in range(game_iter):#ここで繰り返す必要はない。かもしれないが、一応繰り返している。
             newmoves = self.players[0].move(), self.players[1].move() #このselfはSimpleGame, moveの引数だとgameに相当する
             # print("__________", newmoves)
             self.history.append(newmoves) 
             self.players[0].record(self)
-            self.players[1].record(self)
+            self.players[1].record(self)    
+    def move_run2(self, game_iter, round_iter):
+        for _i in range(game_iter):#ここで繰り返す必要はない。かもしれないが、一応繰り返している。
+            if round_iter == 1:#初回のみ、半々でCDをプレイする。
+                newmoves = self.players[0].init_move(), self.players[1].init_move() 
+                self.history.append(newmoves) 
+                self.players[0].record(self)
+                self.players[1].record(self)
+            else:
+                newmoves = self.players[0].move(), self.players[1].move() #このselfはSimpleGame, moveの引数だとgameに相当する
+                # print("__________", newmoves)
+                self.history.append(newmoves) 
+                self.players[0].record(self)
+                self.players[1].record(self)
 
     # def action_run(self, game_iter):
     #     for _i in range(game_iter):#ここで繰り返す必要はない。かもしれないが、同上
@@ -255,7 +270,8 @@ class seihou_koushi(object):
 
 '''正方格子を作る。'''
 #次数４で生成
-L=50 #最初に１辺のノード数を与える。L×Lの正方格子
+L=3
+#最初に１辺のノード数を与える。L×Lの正方格子
 GGraph = seihou_koushi(L, False)
 #GGraph.seihou_koushi_4(L, False)
 # print(GGraph.get_nodes_list())
@@ -331,7 +347,7 @@ print('隣接ペアとの繰り返し対戦回数', number_of_repetition)
 
 """"プレイヤーのオブジェクトを生成する。"""
 player_list = list()
-for i in range(2500):#ここでプレイヤー数を決める。実際は上の２５８行目のLの二乗。
+for i in range(L*L):#ここでプレイヤー数を決める。実際は上の２５８行目のLの二乗。
     # p = random.random()
     p = 1#p=1を与えている、つまり確率１でDを選ぶ。
     tmp = Simple_players(p, players_id=i) 
@@ -376,7 +392,9 @@ total_payoff_table = [[0 for i in range(len(nodes_list))] for j in range(len(nod
 '''ここまででプレイヤーを生成し、それをネットワーク上に配置しした'''
 
 """ここからネットワーク上のゲーミングシミュレーション"""
+"""対戦一周分"""
 # 基本的にノードとプレイヤーのインデックスはk=kである。例）ノード０にいるプレイヤーのインデックスは０
+
 for i in range(len(player_list)):
     # print('test----', i)
     for j in range(len(player_list)):
@@ -531,3 +549,81 @@ post_p_defects = list()
 for i in range(len(player_list)):
     post_p_defects.insert(i, player_list[i].p_defect)
 print("D確率（更新後）一覧=", post_p_defects)
+
+"""ここまでが一ラウンドやって更新までの処理"""
+
+# def microwave(player_list):
+
+round_iter = 1
+while(round_iter < 5):
+    # round_iter = 1
+    for i in range(len(player_list)):
+        # print('test----', i)
+        for j in range(len(player_list)):
+            if eda_list[i][j] == 1:
+                # print('対戦リスト_', i, j)#自分と対戦相手を表示している。
+                #あるプレイヤーとあるプレイヤーの対戦を生成する。
+                a_game = SimpleGame(players=(player_list[i], player_list[j]), payoffmat=PAYOFFMAT)
+                #対戦を規定回数行なう。
+                a_game.move_run2(game_iter=number_of_repetition, round_iter=round_iter) #この規定回数繰り返しとはラウンド一周中に同じ隣接ペアで何回繰り返すか、ラウンドは隣接ペアを一回りして終了する。
+                
+                #諸々の確認
+                # print(a_game.history)#プレイの履歴を表示
+                # print(player_list[i].payoff_memory(a_game))#自分の利得を表示
+                # print(player_list[j].payoff_memory(a_game))#相手の利得を表示
+                # print(a_game.average_payoff())
+                # print(a_game.get_total_payoff())
+                # print(player_list[i].history_memory(a_game))
+                # print(player_list[i].payoff_memory(a_game))
+                tmp_total = a_game.get_total_payoff()
+                tmp_i = tmp_total.get(player_list[i])
+                # print(tmp)
+                tmp_j = tmp_total.get(player_list[j])
+                total_payoff_table[i][j] = tmp_i
+                total_payoff_table[j][i] = tmp_j
+
+    round_iter+=1
+
+    l = list()
+    for i in range(len(player_list)):
+        # print(player_list[i])
+        # print(player_list[i].p_defect)
+        # present_p_defects.append(player_list[i].p_defect)
+        l.insert(i, player_list[i].p_defect)
+    present_p_defects = tuple(l)
+    print("D確率（更新前）一覧=",present_p_defects)
+
+    for i in range(len(player_list)):
+        print("ノード", i, "のPlayer", i, "の更新")
+        print("ノード", i, "のPlayer", i, "のD確率（更新前）=", player_list[i].p_defect)
+        # '''隣人の中から真似る相手の候補をランダムに選ぶ'''
+        x = random.sample(all_neighbors_list[i], 1)
+        chosen_player_index = int(x[0])
+        print("ランダムに選ばれたプレイヤー", chosen_player_index)
+        # '''自分とランダムに選んだプレイヤーの利得の差分を計算する。'''
+        neighbor_index_ofchosenplayer = all_neighbors_list[i].index(x[0])#これは、当該の隣人だけの配列（全プレイヤーの配列ではない）の中で何番目かを返してくる。
+        oppopnet_payoff = sum(total_payoff_table[all_neighbors_list[i][neighbor_index_ofchosenplayer]]) #ランダムに選ばれた隣人の総利得
+        own_payoff = sum(total_payoff_table[i])#自分の総利得
+        # '''フェルミ関数'''
+        beta = 10
+        tmp = np.exp(-(oppopnet_payoff-own_payoff)*beta)
+        # print(tmp)
+        fermi_prob = 1/(1+tmp) #アップデートの確率
+        print("フェルミ関数の値=", fermi_prob) 
+        # '''アップデート'''
+        randb = random.random()#サイコロはプレイヤーごとに振る。
+        #分岐
+        if randb < fermi_prob:
+            player_list[i].p_defect = present_p_defects[chosen_player_index]
+            # player_list[i].p_defect = player_list[chosen_player_index].p_defect
+            # ここでplayer_list[0].p_defectを変更すると動的変更となるため、これはペンディング
+        else:
+            pass
+        # 更新後の確認
+        print("ノード", i, "のPlayer", i, "のD確率（更新後）=",player_list[i].p_defect) 
+
+    # 更新後のp_defectsの確認
+    post_p_defects = list()
+    for i in range(len(player_list)):
+        post_p_defects.insert(i, player_list[i].p_defect)
+    print("D確率（更新後）一覧=", post_p_defects)
