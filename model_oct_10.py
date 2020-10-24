@@ -353,7 +353,8 @@ print('隣接ペアとの繰り返し対戦回数', number_of_repetition)
 player_list = list()
 for i in range(L*L):#ここでプレイヤー数を決める。実際は上の２５８行目のLの二乗。
     # p = random.random()
-    p = 1#p=1を与えている、つまり確率１でDを選ぶ。
+    #p = 1#p=1を与えている、つまり確率１でDを選ぶ。
+    p = random.randint(0, 1)#0ないし1をランダムに与える。
     tmp = Simple_players(p, players_id=i) 
     player_list.append(tmp)
 
@@ -408,7 +409,7 @@ for i in range(len(player_list)):
             a_game = SimpleGame(players=(player_list[i], player_list[j]), payoffmat=PAYOFFMAT)
             #対戦を規定回数行なう。
             # a_game.move_run(game_iter=number_of_repetition) #この規定回数繰り返しとはラウンド一周中に同じ隣接ペアで何回繰り返すか、ラウンドは隣接ペアを一回りして終了する。
-            a_game.move_run2(game_iter=number_of_repetition, round_iter=0)
+            a_game.move_run2(game_iter=number_of_repetition, round_iter=0) #test move_run2 especially at the initial round.
             #諸々の確認
             # print(a_game.history)#プレイの履歴を表示
             # print(player_list[i].payoff_memory(a_game))#自分の利得を表示
@@ -540,9 +541,16 @@ for i in range(len(player_list)):
     randb = random.random()#サイコロはプレイヤーごとに振る。
     #分岐
     if randb < fermi_prob:
-        player_list[i].p_defect = present_p_defects[chosen_player_index]
-        # player_list[i].p_defect = player_list[chosen_player_index].p_defect
-        # ここでplayer_list[0].p_defectを変更すると動的変更となるため、これはペンディング
+        # player_list[i].p_defect = present_p_defects[chosen_player_index] #これが混合戦略使っているときの同期更新
+        # player_list[i].p_defect = player_list[chosen_player_index].p_defect #これでplayer_list[0].p_defectを変更すると動的変更となるため、これはペンディング
+        """以下のif文のアップデートは357行目の０ないし１をランダムで与える初期化と同根の発想をアップデートで実装を試みたもの"""
+        if not player_list[i].p_defect == present_p_defects[chosen_player_index]:# ０を１にひっくり返すアップデートをする。357行と２つあわせて、それともこれだけで、どっちでいけるのか確認
+            if present_p_defects[chosen_player_index] == 0:
+                player_list[i].p_defect = 0
+            else:
+                player_list[i].p_defect = 1    
+        else:
+            pass      
     else:
         pass
     # 更新後の確認
