@@ -1,3 +1,4 @@
+# coding: UTF-8
 import networkx as nx
 import random
 import numpy as np
@@ -10,7 +11,7 @@ import sympy
 # import esgame
 # import class_graphs2
 
-'''ゲームのプレイヤーに関するクラス'''
+# '''ゲームのプレイヤーに関するクラス'''
 class Simple_players:
     #players_id = 0 #固有識別番号
     #このゲームでは混合戦略(ベイジアンゲームの純戦略を決める閾値)を与えている。
