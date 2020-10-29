@@ -8,9 +8,18 @@ import pprint
 import matplotlib.pyplot as plt
 from collections import OrderedDict
 import sympy
+import time
 # import esgame
 # import class_graphs2
 
+def keika(t1,t2):
+    s=0
+    m=0
+    h=0
+    elatime = t2-t1
+    m,s = divmod(elatime, 60)
+    h,m = divmod(m, 60)
+    print('経過時間=%d時%d分%f秒'%(h,m,s))
 # '''ゲームのプレイヤーに関するクラス'''
 class Simple_players:
     #players_id = 0 #固有識別番号
@@ -409,8 +418,8 @@ for i in range(len(player_list)):
             #あるプレイヤーとあるプレイヤーの対戦を生成する。
             a_game = SimpleGame(players=(player_list[i], player_list[j]), payoffmat=PAYOFFMAT)
             #対戦を規定回数行なう。
-            # a_game.move_run(game_iter=number_of_repetition) #この規定回数繰り返しとはラウンド一周中に同じ隣接ペアで何回繰り返すか、ラウンドは隣接ペアを一回りして終了する。
-            a_game.move_run2(game_iter=number_of_repetition, round_iter=0) #test move_run2 especially at the initial round.
+            a_game.move_run(game_iter=number_of_repetition) #この規定回数繰り返しとはラウンド一周中に同じ隣接ペアで何回繰り返すか、ラウンドは隣接ペアを一回りして終了する。
+            # a_game.move_run2(game_iter=number_of_repetition, round_iter=0) #test move_run2 especially at the initial round.
             #諸々の確認
             # print(a_game.history)#プレイの履歴を表示
             # print(player_list[i].payoff_memory(a_game))#自分の利得を表示
@@ -567,78 +576,96 @@ print("D確率（更新後）一覧=", post_p_defects)
 
 # def microwave(player_list):
 
-# round_iter = 0
-# while(round_iter < 5):
-#     # round_iter = 1
-#     for i in range(len(player_list)):
-#         # print('test----', i)
-#         for j in range(len(player_list)):
-#             if eda_list[i][j] == 1:
-#                 # print('対戦リスト_', i, j)#自分と対戦相手を表示している。
-#                 #あるプレイヤーとあるプレイヤーの対戦を生成する。
-#                 a_game = SimpleGame(players=(player_list[i], player_list[j]), payoffmat=PAYOFFMAT)
-#                 #対戦を規定回数行なう。
-#                 a_game.move_run2(game_iter=number_of_repetition, round_iter=round_iter) #この規定回数繰り返しとはラウンド一周中に同じ隣接ペアで何回繰り返すか、ラウンドは隣接ペアを一回りして終了する。
-                
-#                 #諸々の確認
-#                 print(a_game.history)#プレイの履歴を表示
-#                 # print(player_list[i].payoff_memory(a_game))#自分の利得を表示
-#                 # print(player_list[j].payoff_memory(a_game))#相手の利得を表示
-#                 # print(a_game.average_payoff())
-#                 # print(a_game.get_total_payoff())
-#                 # print(player_list[i].history_memory(a_game))
-#                 # print(player_list[i].payoff_memory(a_game))
-#                 tmp_total = a_game.get_total_payoff()
-#                 tmp_i = tmp_total.get(player_list[i])
-#                 # print(tmp)
-#                 tmp_j = tmp_total.get(player_list[j])
-#                 total_payoff_table[i][j] = tmp_i
-#                 total_payoff_table[j][i] = tmp_j
+t1 = time.time()
+round_iter = 0
+while(round_iter < 5):
+    # round_iter = 1
+    for i in range(len(player_list)):
+        # print('test----', i)
+        for j in range(len(player_list)):
+            if eda_list[i][j] == 1:
+                # print('対戦リスト_', i, j)#自分と対戦相手を表示している。
+                #あるプレイヤーとあるプレイヤーの対戦を生成する。
+                a_game = SimpleGame(players=(player_list[i], player_list[j]), payoffmat=PAYOFFMAT)
+                #対戦を規定回数行なう。
+                # a_game.move_run2(game_iter=number_of_repetition, round_iter=round_iter) #この規定回数繰り返しとはラウンド一周中に同じ隣接ペアで何回繰り返すか、ラウンドは隣接ペアを一回りして終了する。
+                a_game.move_run(game_iter=number_of_repetition) #この規定回数繰り返しとはラウンド一周中に同じ隣接ペアで何回繰り返すか、ラウンドは隣接ペアを一回りして終了する。
+                #諸々の確認
+                print(a_game.history)#プレイの履歴を表示
+                # print(player_list[i].payoff_memory(a_game))#自分の利得を表示
+                # print(player_list[j].payoff_memory(a_game))#相手の利得を表示
+                # print(a_game.average_payoff())
+                # print(a_game.get_total_payoff())
+                # print(player_list[i].history_memory(a_game))
+                # print(player_list[i].payoff_memory(a_game))
+                tmp_total = a_game.get_total_payoff()
+                tmp_i = tmp_total.get(player_list[i])
+                # print(tmp)
+                tmp_j = tmp_total.get(player_list[j])
+                total_payoff_table[i][j] = tmp_i
+                total_payoff_table[j][i] = tmp_j
 
-#     # round_iter+=1
+    # round_iter+=1
 
-#     l = list()
-#     for i in range(len(player_list)):
-#         # print(player_list[i])
-#         # print(player_list[i].p_defect)
-#         # present_p_defects.append(player_list[i].p_defect)
-#         l.insert(i, player_list[i].p_defect)
-#     present_p_defects = tuple(l)
-#     print(round_iter,"D確率（更新前）一覧=",present_p_defects)
+    l = list()
+    for i in range(len(player_list)):
+        # print(player_list[i])
+        # print(player_list[i].p_defect)
+        # present_p_defects.append(player_list[i].p_defect)
+        l.insert(i, player_list[i].p_defect)
+    present_p_defects = tuple(l)
+    print(round_iter,"D確率（更新前）一覧=",present_p_defects)
 
-#     for i in range(len(player_list)):
-#         print("ノード", i, "のPlayer", i, "の更新")
-#         print("ノード", i, "のPlayer", i, "のD確率（更新前）=", player_list[i].p_defect)
-#         # '''隣人の中から真似る相手の候補をランダムに選ぶ'''
-#         x = random.sample(all_neighbors_list[i], 1)
-#         chosen_player_index = int(x[0])
-#         print("ランダムに選ばれたプレイヤー", chosen_player_index)
-#         # '''自分とランダムに選んだプレイヤーの利得の差分を計算する。'''
-#         neighbor_index_ofchosenplayer = all_neighbors_list[i].index(x[0])#これは、当該の隣人だけの配列（全プレイヤーの配列ではない）の中で何番目かを返してくる。
-#         oppopnet_payoff = sum(total_payoff_table[all_neighbors_list[i][neighbor_index_ofchosenplayer]]) #ランダムに選ばれた隣人の総利得
-#         own_payoff = sum(total_payoff_table[i])#自分の総利得
-#         # '''フェルミ関数'''
-#         beta = 10
-#         tmp = np.exp(-(oppopnet_payoff-own_payoff)*beta)
-#         # print(tmp)
-#         fermi_prob = 1/(1+tmp) #アップデートの確率
-#         print("フェルミ関数の値=", fermi_prob) 
-#         # '''アップデート'''
-#         randb = random.random()#サイコロはプレイヤーごとに振る。
-#         #分岐
-#         if randb < fermi_prob:
-#             player_list[i].p_defect = present_p_defects[chosen_player_index]
-#             # player_list[i].p_defect = player_list[chosen_player_index].p_defect
-#             # ここでplayer_list[0].p_defectを変更すると動的変更となるため、これはペンディング
-#         else:
-#             pass
-#         # 更新後の確認
-#         print("ノード", i, "のPlayer", i, "のD確率（更新後）=",player_list[i].p_defect) 
+    for i in range(len(player_list)):
+        print("ノード", i, "のPlayer", i, "の更新")
+        print("ノード", i, "のPlayer", i, "のD確率（更新前）=", player_list[i].p_defect)
+        # '''隣人の中から真似る相手の候補をランダムに選ぶ'''
+        x = random.sample(all_neighbors_list[i], 1)
+        chosen_player_index = int(x[0])
+      
+        print("ランダムに選ばれたプレイヤー", chosen_player_index)
+        # '''自分とランダムに選んだプレイヤーの利得の差分を計算する。'''
+        neighbor_index_ofchosenplayer = all_neighbors_list[i].index(x[0])#これは、当該の隣人だけの配列（全プレイヤーの配列ではない）の中で何番目かを返してくる。
+        oppopnet_payoff = sum(total_payoff_table[all_neighbors_list[i][neighbor_index_ofchosenplayer]]) #ランダムに選ばれた隣人の総利得
+        own_payoff = sum(total_payoff_table[i])#自分の総利得
+        # '''フェルミ関数'''
+        beta = 10
+        tmp = np.exp(-(oppopnet_payoff-own_payoff)*beta)
+        # print(tmp)
+        fermi_prob = 1/(1+tmp) #アップデートの確率
+        print("フェルミ関数の値=", fermi_prob) 
+        # '''アップデート'''
+        randb = random.random()#サイコロはプレイヤーごとに振る。
+        #分岐
+        # if randb < fermi_prob:
+        #     player_list[i].p_defect = present_p_defects[chosen_player_index]
+        #     # player_list[i].p_defect = player_list[chosen_player_index].p_defect
+        #     # ここでplayer_list[0].p_defectを変更すると動的変更となるため、これはペンディング
+        # else:
+        #     pass
+        if randb < fermi_prob:
+            # player_list[i].p_defect = present_p_defects[chosen_player_index] #これが混合戦略使っているときの同期更新
+            # player_list[i].p_defect = player_list[chosen_player_index].p_defect #これでplayer_list[0].p_defectを変更すると動的変更となるため、これはペンディング
+            """以下のif文のアップデートは357行目の０ないし１をランダムで与える初期化と同根の発想をアップデートで実装を試みたもの"""
+            if not player_list[i].p_defect == present_p_defects[chosen_player_index]:# ０を１にひっくり返すアップデートをする。357行と２つあわせて、それともこれだけで、どっちでいけるのか確認
+                if present_p_defects[chosen_player_index] == 0:
+                    player_list[i].p_defect = 0
+                else:
+                    player_list[i].p_defect = 1    
+            else:
+                pass      
+        else:
+            pass
+        # 更新後の確認
+        print("ノード", i, "のPlayer", i, "のD確率（更新後）=",player_list[i].p_defect) 
 
-#     # 更新後のp_defectsの確認
-#     post_p_defects = list()
-#     for i in range(len(player_list)):
-#         post_p_defects.insert(i, player_list[i].p_defect)
-#     print(round_iter,"D確率（更新後）一覧=", post_p_defects)
+    # 更新後のp_defectsの確認
+    post_p_defects = list()
+    for i in range(len(player_list)):
+        post_p_defects.insert(i, player_list[i].p_defect)
+    print(round_iter,"D確率（更新後）一覧=", post_p_defects)
 
-#     round_iter+=1
+    round_iter+=1
+
+t2 = time.time()
+keika(t1,t2)
