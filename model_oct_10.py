@@ -286,7 +286,7 @@ if __name__ == "__main__":
 
     '''正方格子を作る。'''
     #次数４で生成
-    L=50
+    L=30
     #最初に１辺のノード数を与える。L×Lの正方格子
     GGraph = seihou_koushi(L, False)
     #GGraph.seihou_koushi_4(L, False)
@@ -327,8 +327,8 @@ if __name__ == "__main__":
 
     """与えられた正方格子上に配置された全プレイヤーが、隣接する各プレイヤーとゲームを規定の回数だけ繰り返し、それを隣接するプレイヤー全員と行なう。"""
     """現在は自分自身との対戦は無い。枝リストに着目して対戦を回す。"""
-    PAYOFFMAT = [[(3,3),(0,5)], [(5,0),(1,1)]] #ゲームの利得行列（囚人のジレンマ）
-    # PAYOFFMAT = [[(3,3),(0,0)], [(0,0),(1,1)]] #ゲームの利得行列（コーディネーションゲーム）
+    # PAYOFFMAT = [[(3,3),(0,5)], [(5,0),(1,1)]] #ゲームの利得行列（囚人のジレンマ）
+    PAYOFFMAT = [[(3,3),(0,0)], [(0,0),(1,1)]] #ゲームの利得行列（コーディネーションゲーム）
 
     number_of_repetition = 1 #規定の繰り返し回数
 
@@ -364,9 +364,9 @@ if __name__ == "__main__":
     """"プレイヤーのオブジェクトを生成する。"""
     player_list = list()
     for i in range(L*L):#ここでプレイヤー数を決める。実際は上の２５８行目のLの二乗。
-        # p = random.random()
+        p = random.random()
         #p = 1#p=1を与えている、つまり確率１でDを選ぶ。
-        p = random.randint(0, 1)#0ないし1をランダムに与える。
+        # p = random.randint(0, 1)#0ないし1をランダムに与える。
         tmp = Simple_players(p, players_id=i) 
         player_list.append(tmp)
 
@@ -585,7 +585,7 @@ if __name__ == "__main__":
 
     t1 = time.time()
     round_iter = 0
-    number_of_rounds = 10000
+    number_of_rounds = 1000
     while(round_iter <  number_of_rounds):
         # round_iter = 1
         for i in range(len(player_list)):
@@ -636,7 +636,7 @@ if __name__ == "__main__":
             neighbor_index_ofchosenplayer = all_neighbors_list[i].index(x[0])#これは、当該の隣人だけの配列（全プレイヤーの配列ではない）の中で何番目かを返してくる。
             oppopnet_payoff = sum(total_payoff_table[all_neighbors_list[i][neighbor_index_ofchosenplayer]]) #ランダムに選ばれた隣人の総利得
             own_payoff = sum(total_payoff_table[i])#自分の総利得
-            # '''フェルミ関数'''
+            '''フェルミ関数'''
             beta = 10
             tmp = np.exp(-(oppopnet_payoff-own_payoff)*beta)
             # print(tmp)
@@ -652,16 +652,17 @@ if __name__ == "__main__":
             # else:
             #     pass
             if randb < fermi_prob:
-                # player_list[i].p_defect = present_p_defects[chosen_player_index] #これが混合戦略使っているときの同期更新
+                """以下のif文のアップデートはコーディネーションゲームの混合戦略をプレイするときはすぐ下のアップデートを使う。"""
+                player_list[i].p_defect = present_p_defects[chosen_player_index] #これが混合戦略使っているときの同期更新
                 # player_list[i].p_defect = player_list[chosen_player_index].p_defect #これでplayer_list[0].p_defectを変更すると動的変更となるため、これはペンディング
                 """以下のif文のアップデートは357行目の０ないし１をランダムで与える初期化と同根の発想をアップデートで実装を試みたもの"""
-                if not player_list[i].p_defect == present_p_defects[chosen_player_index]:# ０を１にひっくり返すアップデートをする。357行と２つあわせて、それともこれだけで、どっちでいけるのか確認
-                    if present_p_defects[chosen_player_index] == 0:
-                        player_list[i].p_defect = 0
-                    else:
-                        player_list[i].p_defect = 1    
-                else:
-                    pass      
+            #    if not player_list[i].p_defect == present_p_defects[chosen_player_index]:# ０を１にひっくり返すアップデートをする。357行と２つあわせて、それともこれだけで、どっちでいけるのか確認
+            #         if present_p_defects[chosen_player_index] == 0:
+            #             player_list[i].p_defect = 0
+            #         else:
+            #             player_list[i].p_defect = 1    
+            #     else: 
+            #         pass      
             else:
                 pass
             # 更新後の確認
