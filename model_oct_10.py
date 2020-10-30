@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from collections import OrderedDict
 import sympy
 import time
+import csv
 # import esgame
 # import class_graphs2
 
@@ -281,391 +282,405 @@ class seihou_koushi(object):
         """生成したインスタンスに固有IDを付与する。"""
         return self.seihou_koushi_idNum
 
+if __name__ == "__main__":
 
-'''正方格子を作る。'''
-#次数４で生成
-L=3
-#最初に１辺のノード数を与える。L×Lの正方格子
-GGraph = seihou_koushi(L, False)
-#GGraph.seihou_koushi_4(L, False)
-# print(GGraph.get_nodes_list())
-# print(len(GGraph.get_nodes_list()))
+    '''正方格子を作る。'''
+    #次数４で生成
+    L=50
+    #最初に１辺のノード数を与える。L×Lの正方格子
+    GGraph = seihou_koushi(L, False)
+    #GGraph.seihou_koushi_4(L, False)
+    # print(GGraph.get_nodes_list())
+    # print(len(GGraph.get_nodes_list()))
 
-'''ノード座標の順序付辞書を生成する（必須）'''
-GGnodes = GGraph.labelling(L)#seihou_koushiのメソッドlabelling()を使用する。
-print("ノードをlabellingした辞書=", GGnodes)
+    '''ノード座標の順序付辞書を生成する（必須）'''
+    GGnodes = GGraph.labelling(L)#seihou_koushiのメソッドlabelling()を使用する。
+    # print("ノードをlabellingした辞書=", GGnodes)
 
-'''このノード座標のリスト化は絶対必要'''
-#ノード座標のリスト化
-nodes_list=list(GGnodes)
-print('ノードリスト＝', nodes_list)
-# print(list(GGraph.G.nodes))#生成した格子の全ノードを表示して確認。
+    '''このノード座標のリスト化は絶対必要'''
+    #ノード座標のリスト化
+    nodes_list=list(GGnodes)
+    # print('ノードリスト＝', nodes_list)
+    # print(list(GGraph.G.nodes))#生成した格子の全ノードを表示して確認。
 
-# # 0番目のノード(0,0)にいるプレイヤーの隣人を取得して表示する。seihou_koushiのメソッドget_rinjin()を使う。
-# rinjin_0 = GGraph.get_rinjin(GGnodes[0])
-# print(rinjin_0)
+    # # 0番目のノード(0,0)にいるプレイヤーの隣人を取得して表示する。seihou_koushiのメソッドget_rinjin()を使う。
+    # rinjin_0 = GGraph.get_rinjin(GGnodes[0])
+    # print(rinjin_0)
 
-# # 逆に座標(0,0)からノードリストの番号に変換する。
-# keys = GGraph.get_keys_from_value((0,0))
-# print("key=", keys)
+    # # 逆に座標(0,0)からノードリストの番号に変換する。
+    # keys = GGraph.get_keys_from_value((0,0))
+    # print("key=", keys)
 
-"""各プレイヤーの隣人のノード番号のリストを作る。"""
-all_neighbors_list =[]#[[ノード０が繋がっているノードのリスト],[ノード１が繋がっているノードのリスト],[ノード２が以下略],以下略]
-for j in range(len(nodes_list)):
-    current_rinjin = GGraph.get_rinjin(GGnodes[j])
-    neighbors_of_a_player = []
-    for i in range(len(current_rinjin)):
-        keys = GGraph.get_keys_from_value(current_rinjin[i])[0] #keysが要素数１のリストであるため、[0]番目を指定すれば、中身を常に取得できる。
-        neighbors_of_a_player.append(keys)
-    all_neighbors_list.append(neighbors_of_a_player)
-# print("____________", all_neighbors_list)
+    """各プレイヤーの隣人のノード番号のリストを作る。"""
+    all_neighbors_list =[]#[[ノード０が繋がっているノードのリスト],[ノード１が繋がっているノードのリスト],[ノード２が以下略],以下略]
+    for j in range(len(nodes_list)):
+        current_rinjin = GGraph.get_rinjin(GGnodes[j])
+        neighbors_of_a_player = []
+        for i in range(len(current_rinjin)):
+            keys = GGraph.get_keys_from_value(current_rinjin[i])[0] #keysが要素数１のリストであるため、[0]番目を指定すれば、中身を常に取得できる。
+            neighbors_of_a_player.append(keys)
+        all_neighbors_list.append(neighbors_of_a_player)
+    # print("____________", all_neighbors_list)
 
-print('各ノードの隣人のリスト=', all_neighbors_list)
-# print(type(all_neighbors_list))
+    # print('各ノードの隣人のリスト=', all_neighbors_list)
+    # print(type(all_neighbors_list))
 
-"""与えられた正方格子上に配置された全プレイヤーが、隣接する各プレイヤーとゲームを規定の回数だけ繰り返し、それを隣接するプレイヤー全員と行なう。"""
-"""現在は自分自身との対戦は無い。枝リストに着目して対戦を回す。"""
-PAYOFFMAT = [[(3,3),(0,5)], [(5,0),(1,1)]] #ゲームの利得行列（囚人のジレンマ）
-# PAYOFFMAT = [[(3,3),(0,0)], [(0,0),(1,1)]] #ゲームの利得行列（コーディネーションゲーム）
+    """与えられた正方格子上に配置された全プレイヤーが、隣接する各プレイヤーとゲームを規定の回数だけ繰り返し、それを隣接するプレイヤー全員と行なう。"""
+    """現在は自分自身との対戦は無い。枝リストに着目して対戦を回す。"""
+    PAYOFFMAT = [[(3,3),(0,5)], [(5,0),(1,1)]] #ゲームの利得行列（囚人のジレンマ）
+    # PAYOFFMAT = [[(3,3),(0,0)], [(0,0),(1,1)]] #ゲームの利得行列（コーディネーションゲーム）
 
-number_of_repetition = 1 #規定の繰り返し回数
+    number_of_repetition = 1 #規定の繰り返し回数
 
-print('利得行列', PAYOFFMAT)
-print('隣接ペアとの繰り返し対戦回数', number_of_repetition)
+    print('利得行列', PAYOFFMAT)
+    print('隣接ペアとの繰り返し対戦回数', number_of_repetition)
 
-# rA = PAYOFFMAT[0][0][0] #CC
-# rB = PAYOFFMAT[1][0][0] #DC
-# rC = PAYOFFMAT[0][1][0] #CD
-# rD = PAYOFFMAT[1][1][0] #DD
-# print("行プレイヤーの利得(CC,DC,CD,DD)=", rA,rB,rC,rD)
+    # rA = PAYOFFMAT[0][0][0] #CC
+    # rB = PAYOFFMAT[1][0][0] #DC
+    # rC = PAYOFFMAT[0][1][0] #CD
+    # rD = PAYOFFMAT[1][1][0] #DD
+    # print("行プレイヤーの利得(CC,DC,CD,DD)=", rA,rB,rC,rD)
 
-# Cp = sympy.Symbol('Cp')
-# ep1c = Cp*rA+(1-Cp)*rC
-# # print(ep1c.subs([(rA, rA), (rB, rB)]))
-# ep1d = Cp*rB+(1-Cp)*rD
-# # print(ep1d.subs([(rC, rC), (rD, rD)]))
-# print("列プレイヤーの混ぜ=", sympy.solve(ep1c-ep1d))
+    # Cp = sympy.Symbol('Cp')
+    # ep1c = Cp*rA+(1-Cp)*rC
+    # # print(ep1c.subs([(rA, rA), (rB, rB)]))
+    # ep1d = Cp*rB+(1-Cp)*rD
+    # # print(ep1d.subs([(rC, rC), (rD, rD)]))
+    # print("列プレイヤーの混ぜ=", sympy.solve(ep1c-ep1d))
 
-# Ca = PAYOFFMAT[0][0][1] #CC
-# Cb = PAYOFFMAT[1][0][1] #DC
-# Cc = PAYOFFMAT[0][1][1] #CD
-# Cd = PAYOFFMAT[1][1][1] #DD
-# print("列プレイヤーの利得(CC,DC,CD,DD)=", Ca,Cb,Cc,Cd)
+    # Ca = PAYOFFMAT[0][0][1] #CC
+    # Cb = PAYOFFMAT[1][0][1] #DC
+    # Cc = PAYOFFMAT[0][1][1] #CD
+    # Cd = PAYOFFMAT[1][1][1] #DD
+    # print("列プレイヤーの利得(CC,DC,CD,DD)=", Ca,Cb,Cc,Cd)
 
-# Rp = sympy.Symbol('Rp')
-# ep2c = Rp*Ca+(1-Rp)*Cb
-# # print(ep2c.subs([(Ca, Ca), (Cb, Cb)]))
-# ep2d = Rp*Cc+(1-Rp)*Cd
-# # print(ep2d.subs([(Cc, Cc), (Cd, Cd)]))
-# print("行プレイヤーの混ぜ=", sympy.solve(ep2c-ep2d))
+    # Rp = sympy.Symbol('Rp')
+    # ep2c = Rp*Ca+(1-Rp)*Cb
+    # # print(ep2c.subs([(Ca, Ca), (Cb, Cb)]))
+    # ep2d = Rp*Cc+(1-Rp)*Cd
+    # # print(ep2d.subs([(Cc, Cc), (Cd, Cd)]))
+    # print("行プレイヤーの混ぜ=", sympy.solve(ep2c-ep2d))
 
-""""プレイヤーのオブジェクトを生成する。"""
-player_list = list()
-for i in range(L*L):#ここでプレイヤー数を決める。実際は上の２５８行目のLの二乗。
-    # p = random.random()
-    #p = 1#p=1を与えている、つまり確率１でDを選ぶ。
-    p = random.randint(0, 1)#0ないし1をランダムに与える。
-    tmp = Simple_players(p, players_id=i) 
-    player_list.append(tmp)
+    """"プレイヤーのオブジェクトを生成する。"""
+    player_list = list()
+    for i in range(L*L):#ここでプレイヤー数を決める。実際は上の２５８行目のLの二乗。
+        # p = random.random()
+        #p = 1#p=1を与えている、つまり確率１でDを選ぶ。
+        p = random.randint(0, 1)#0ないし1をランダムに与える。
+        tmp = Simple_players(p, players_id=i) 
+        player_list.append(tmp)
 
-print('player_list（プレイヤーオブジェクトのリスト）=', player_list)
-# print(type(player_list))
+    # print('player_list（プレイヤーオブジェクトのリスト）=', player_list)
+    # print(type(player_list))
 
-"""上で作った正方格子のネットワーク上にプレイヤーオブジェクトを配置する"""
-# print(nx.enumerate_all_cliques(GGraph))
-# list(nx.enumerate_all_cliques(GGraph))
-# print(GGraph.edges(GGnodes[0][0]))
-# G =nx.grid_2d_graph(2,2, False)
-# print("___________", G.edges(G[(0,0)]))
-# print(list(nx.enumerate_all_cliques(G)))
-# print(list(filter(lambda x: len(x) > 1, nx.enumerate_all_cliques(G))))
+    """上で作った正方格子のネットワーク上にプレイヤーオブジェクトを配置する"""
+    # print(nx.enumerate_all_cliques(GGraph))
+    # list(nx.enumerate_all_cliques(GGraph))
+    # print(GGraph.edges(GGnodes[0][0]))
+    # G =nx.grid_2d_graph(2,2, False)
+    # print("___________", G.edges(G[(0,0)]))
+    # print(list(nx.enumerate_all_cliques(G)))
+    # print(list(filter(lambda x: len(x) > 1, nx.enumerate_all_cliques(G))))
 
-'''eda_listとは隣人リストを隣接関係として行列で表記したもの'''
-#eda_list = [[len(nodes_list)][len(nodes_list)]]
-eda_list = [[0 for i in range(len(nodes_list))] for j in range(len(nodes_list))] #node_list X node_list の２次元配列が返ってくる。
-#print(eda_list)
+    '''eda_listとは隣人リストを隣接関係として行列で表記したもの'''
+    #eda_list = [[len(nodes_list)][len(nodes_list)]]
+    eda_list = [[0 for i in range(len(nodes_list))] for j in range(len(nodes_list))] #node_list X node_list の２次元配列が返ってくる。
+    #print(eda_list)
 
-for i in range(len(player_list)):
-    for j in range(len(all_neighbors_list[i])):
-        eda_list[i][all_neighbors_list[i][j]]+=1
-#print(eda_list)
+    for i in range(len(player_list)):
+        for j in range(len(all_neighbors_list[i])):
+            eda_list[i][all_neighbors_list[i][j]]+=1
+    #print(eda_list)
 
-for i in range(len(player_list)):
-    for j in range(len(all_neighbors_list[i])):
-        tmp = all_neighbors_list[i][j]
-        if eda_list[i][tmp] == 1:      
-            #print(tmp)
-            eda_list[tmp][i] = 0
+    for i in range(len(player_list)):
+        for j in range(len(all_neighbors_list[i])):
+            tmp = all_neighbors_list[i][j]
+            if eda_list[i][tmp] == 1:      
+                #print(tmp)
+                eda_list[tmp][i] = 0
 
-# print(eda_list)
+    # print(eda_list)
 
-history_memory = []
-payoff_memory = []
-total_payoff_table = [[0 for i in range(len(nodes_list))] for j in range(len(nodes_list))]
-# print(player_list[0])
+    history_memory = []
+    payoff_memory = []
+    total_payoff_table = [[0 for i in range(len(nodes_list))] for j in range(len(nodes_list))]
+    # print(player_list[0])
 
-'''ここまででプレイヤーを生成し、それをネットワーク上に配置しした'''
+    '''ここまででプレイヤーを生成し、それをネットワーク上に配置しした'''
 
-"""ここからネットワーク上のゲーミングシミュレーション"""
-"""対戦一周分"""
-# 基本的にノードとプレイヤーのインデックスはk=kである。例）ノード０にいるプレイヤーのインデックスは０
+    """ここからネットワーク上のゲーミングシミュレーション"""
+    """対戦一周分"""
+    # 基本的にノードとプレイヤーのインデックスはk=kである。例）ノード０にいるプレイヤーのインデックスは０
 
-for i in range(len(player_list)):
-    # print('test----', i)
-    for j in range(len(player_list)):
-        if eda_list[i][j] == 1:
-            # print('対戦リスト_', i, j)#自分と対戦相手を表示している。
-            #あるプレイヤーとあるプレイヤーの対戦を生成する。
-            a_game = SimpleGame(players=(player_list[i], player_list[j]), payoffmat=PAYOFFMAT)
-            #対戦を規定回数行なう。
-            a_game.move_run(game_iter=number_of_repetition) #この規定回数繰り返しとはラウンド一周中に同じ隣接ペアで何回繰り返すか、ラウンドは隣接ペアを一回りして終了する。
-            # a_game.move_run2(game_iter=number_of_repetition, round_iter=0) #test move_run2 especially at the initial round.
-            #諸々の確認
-            # print(a_game.history)#プレイの履歴を表示
-            # print(player_list[i].payoff_memory(a_game))#自分の利得を表示
-            # print(player_list[j].payoff_memory(a_game))#相手の利得を表示
-            # print(a_game.average_payoff())
-            # print(a_game.get_total_payoff())
-            # print(player_list[i].history_memory(a_game))
-            # print(player_list[i].payoff_memory(a_game))
-            tmp_total = a_game.get_total_payoff()
-            tmp_i = tmp_total.get(player_list[i])
-            # print(tmp)
-            tmp_j = tmp_total.get(player_list[j])
-            total_payoff_table[i][j] = tmp_i
-            total_payoff_table[j][i] = tmp_j
-            # print(total_payoff_table[i][j])
-            # print(total_payoff_table[j][i])
+    # for i in range(len(player_list)):
+    #     # print('test----', i)
+    #     for j in range(len(player_list)):
+    #         if eda_list[i][j] == 1:
+    #             # print('対戦リスト_', i, j)#自分と対戦相手を表示している。
+    #             #あるプレイヤーとあるプレイヤーの対戦を生成する。
+    #             a_game = SimpleGame(players=(player_list[i], player_list[j]), payoffmat=PAYOFFMAT)
+    #             #対戦を規定回数行なう。
+    #             a_game.move_run(game_iter=number_of_repetition) #この規定回数繰り返しとはラウンド一周中に同じ隣接ペアで何回繰り返すか、ラウンドは隣接ペアを一回りして終了する。
+    #             # a_game.move_run2(game_iter=number_of_repetition, round_iter=0) #test move_run2 especially at the initial round.
+    #             #諸々の確認
+    #             # print(a_game.history)#プレイの履歴を表示
+    #             # print(player_list[i].payoff_memory(a_game))#自分の利得を表示
+    #             # print(player_list[j].payoff_memory(a_game))#相手の利得を表示
+    #             # print(a_game.average_payoff())
+    #             # print(a_game.get_total_payoff())
+    #             # print(player_list[i].history_memory(a_game))
+    #             # print(player_list[i].payoff_memory(a_game))
+    #             tmp_total = a_game.get_total_payoff()
+    #             tmp_i = tmp_total.get(player_list[i])
+    #             # print(tmp)
+    #             tmp_j = tmp_total.get(player_list[j])
+    #             total_payoff_table[i][j] = tmp_i
+    #             total_payoff_table[j][i] = tmp_j
+    #             # print(total_payoff_table[i][j])
+    #             # print(total_payoff_table[j][i])
 
-            # history_memory.append(player_list[i].history_memory(a_game))
-            # payoff_memory.append(player_list[i].payoff_memory(a_game))
-            # for j in range(len(all_neighbors_list[i]):
+    #             # history_memory.append(player_list[i].history_memory(a_game))
+    #             # payoff_memory.append(player_list[i].payoff_memory(a_game))
+    #             # for j in range(len(all_neighbors_list[i]):
 
-            #print(history_memory)
-            #test = list(zip(history_memory, payoff_memory))
-            # print(test)
-            
-            #print(player_list[0].record(a_game))
+    #             #print(history_memory)
+    #             #test = list(zip(history_memory, payoff_memory))
+    #             # print(test)
+                
+    #             #print(player_list[0].record(a_game))
 
-print("全員の利得流列=", total_payoff_table)
-print("ノード０のプレイヤーの得点=", sum(total_payoff_table[0])) #自分がその期において得た得点の合計
+    # print("全員の利得流列=", total_payoff_table)
+    # print("ノード０のプレイヤーの得点=", sum(total_payoff_table[0])) #自分がその期において得た得点の合計
 
-'''この得点の合計とランダムに選んだ隣人の同じ合計と比較して、アップデート（行動の選択を変える）する'''
-#現在、updateはフェルミ関数で行っている。確率で戦略を変更する。
+    '''この得点の合計とランダムに選んだ隣人の同じ合計と比較して、アップデート（行動の選択を変える）する'''
+    #現在、updateはフェルミ関数で行っている。確率で戦略を変更する。
 
-'''とりあえず一周してすべてのプレイヤーの全ての対戦終了後に、プレイヤーを０番に固定して０番のアップデートまでする作戦
+    '''とりあえず一周してすべてのプレイヤーの全ての対戦終了後に、プレイヤーを０番に固定して０番のアップデートまでする作戦
 
-# print(all_neighbors_list[0])#ノード０番にいるプレイヤー０の隣人のリスト、ノード１（プレイヤー１）とノード３（プレイヤー３）が出る。
-print('1のD確率', player_list[1].p_defect)
-print('3のD確率', player_list[3].p_defect)
-# print(total_payoff_table[1])
-# print(total_payoff_table[all_neighbors_list[0][0]])#ノード１（プレイヤー１）の得点
-# print(total_payoff_table[all_neighbors_list[0][1]])#ノード３（プレイヤー３）の得点
+    # print(all_neighbors_list[0])#ノード０番にいるプレイヤー０の隣人のリスト、ノード１（プレイヤー１）とノード３（プレイヤー３）が出る。
+    print('1のD確率', player_list[1].p_defect)
+    print('3のD確率', player_list[3].p_defect)
+    # print(total_payoff_table[1])
+    # print(total_payoff_table[all_neighbors_list[0][0]])#ノード１（プレイヤー１）の得点
+    # print(total_payoff_table[all_neighbors_list[0][1]])#ノード３（プレイヤー３）の得点
 
-#print(random.sample(all_neighbors_list[0], 1))
-x = random.sample(all_neighbors_list[0], 1) #ノード０の隣人からランダムで１人選択する。リストで戻ってくる
-# y = x[0] #この代入が必要な理由？？？
-print("ランダムに選ばれたプレイヤー",x[0]) #選ばれた隣人のリストの要素は１個なので、０を指定すれば、選ばれた隣人のノード番号が得られる。
-# print("x[0]の型", type(x[0]))
-# print("x[0]を代入したyの型",type(y))
-# ノード番号はそのままプレイヤーのインデックスなので, int型のx[0]はそのまま代入できそうだが、実際にはエラーがでるので、int(x[0])する。
-chosen_player_index = int(x[0])
-# print("x[0]を代入したchosen_player_indexの型", type(chosen_player_index))
-# chosen_player_index = int(y)#この型変換が必要らしい。
-# print("int(y)を代入したchosen_player_indexの型", type(chosen_player_index))
-# chosen_player_index = y
-# print("yを代入したchosen_player_indexの型", type(chosen_player_index))
-# print('--------error-------', player_list[x[0]].p_defect)
-# print('--------error-------', player_list[chosen_player_index].p_defect)
-print("ランダムに選ばれたプレイヤーのp.defect=", player_list[chosen_player_index].p_defect)
-
-print('隣人行列リスト内でのインデックス',all_neighbors_list[0].index(x[0]))#これは、当該０の隣人の配列[1,3]（全プレイヤーの配列ではない）の中で何番目かを返してくる。
-chosen_neighbor_index = all_neighbors_list[0].index(x[0])
-# print(chosen_neighbor_index)#ランダムに選ばれた隣人の隣人配列内でのインデックス
-# print(type(chosen_neighbor_index))
-# print('------試しにこれはエラーではない-------', player_list[chosen_neighbor_index].p_defect)
-oppopnet_payoff = sum(total_payoff_table[all_neighbors_list[0][chosen_neighbor_index]]) #ランダムに選ばれた隣人のペイオフ
-# print(oppopnet_payoff)
-own_payoff = sum(total_payoff_table[0])
-# print(own_payoff)
-
-#フェルミ関数
-beta = 10
-tmp = np.exp(-(oppopnet_payoff-own_payoff)*beta)
-# print(tmp)
-fermi_prob = 1/(1+tmp) #アップデートの確率
-print("フェルミ関数の値=", fermi_prob) 
-
-print("ノード０のPlayer０のD確率（更新前）=", player_list[0].p_defect)
-# print('選択された相手のD確率（更新前）=', player_list[chosen_player_index].p_defect)
-
-# 戦略の更新
-randb = random.random()
-#分岐
-if randb < fermi_prob:
-    player_list[0].p_defect = player_list[chosen_player_index].p_defect
-    # player_list[0].p_defectを変更する
-else:
-    pass
-
-# 更新後の確認
-print("ノード０のPlayer０のD確率（更新後）=",player_list[0].p_defect) 
-# print('選ばれた相手のD確率（更新後）=',player_list[chosen_player_index].p_defect)
-
-作戦ここまで'''
-
-# # 上がわかれば、fermi関数から更新までをプレイヤークラスのメソッドで行いたい。未完成
-# player_list[0].p_update(chosen_player_index, oppopnet_payoff, own_payoff, beta=10)
-# print(player_list[0].p_defect)
-
-#更新は同期更新で行なうとし、更新前のp_defectを格納する配列をつくる
-l = list()
-for i in range(len(player_list)):
-    # print(player_list[i])
-    # print(player_list[i].p_defect)
-    # present_p_defects.append(player_list[i].p_defect)
-    l.insert(i, player_list[i].p_defect)
-present_p_defects = tuple(l)
-print("D確率（更新前）一覧=",present_p_defects)
-
-# '''動的に変更されている。０が１を真似たとして、その０を３が真似るとして、３は１を真似た０の真似をしている。'''
-# 上記の理由により、同期更新で行なう。ここで動的というのは私的定義だが、公式定義では非同期の一種らしい。
-for i in range(len(player_list)):
-    print("ノード", i, "のPlayer", i, "の更新")
-    print("ノード", i, "のPlayer", i, "のD確率（更新前）=", player_list[i].p_defect)
-    # '''隣人の中から真似る相手の候補をランダムに選ぶ'''
-    x = random.sample(all_neighbors_list[i], 1)
+    #print(random.sample(all_neighbors_list[0], 1))
+    x = random.sample(all_neighbors_list[0], 1) #ノード０の隣人からランダムで１人選択する。リストで戻ってくる
+    # y = x[0] #この代入が必要な理由？？？
+    print("ランダムに選ばれたプレイヤー",x[0]) #選ばれた隣人のリストの要素は１個なので、０を指定すれば、選ばれた隣人のノード番号が得られる。
+    # print("x[0]の型", type(x[0]))
+    # print("x[0]を代入したyの型",type(y))
+    # ノード番号はそのままプレイヤーのインデックスなので, int型のx[0]はそのまま代入できそうだが、実際にはエラーがでるので、int(x[0])する。
     chosen_player_index = int(x[0])
-    print("ランダムに選ばれたプレイヤー", chosen_player_index)
-    # '''自分とランダムに選んだプレイヤーの利得の差分を計算する。'''
-    neighbor_index_ofchosenplayer = all_neighbors_list[i].index(x[0])#これは、当該の隣人だけの配列（全プレイヤーの配列ではない）の中で何番目かを返してくる。
-    oppopnet_payoff = sum(total_payoff_table[all_neighbors_list[i][neighbor_index_ofchosenplayer]]) #ランダムに選ばれた隣人の総利得
-    own_payoff = sum(total_payoff_table[i])#自分の総利得
-    # '''フェルミ関数'''
+    # print("x[0]を代入したchosen_player_indexの型", type(chosen_player_index))
+    # chosen_player_index = int(y)#この型変換が必要らしい。
+    # print("int(y)を代入したchosen_player_indexの型", type(chosen_player_index))
+    # chosen_player_index = y
+    # print("yを代入したchosen_player_indexの型", type(chosen_player_index))
+    # print('--------error-------', player_list[x[0]].p_defect)
+    # print('--------error-------', player_list[chosen_player_index].p_defect)
+    print("ランダムに選ばれたプレイヤーのp.defect=", player_list[chosen_player_index].p_defect)
+
+    print('隣人行列リスト内でのインデックス',all_neighbors_list[0].index(x[0]))#これは、当該０の隣人の配列[1,3]（全プレイヤーの配列ではない）の中で何番目かを返してくる。
+    chosen_neighbor_index = all_neighbors_list[0].index(x[0])
+    # print(chosen_neighbor_index)#ランダムに選ばれた隣人の隣人配列内でのインデックス
+    # print(type(chosen_neighbor_index))
+    # print('------試しにこれはエラーではない-------', player_list[chosen_neighbor_index].p_defect)
+    oppopnet_payoff = sum(total_payoff_table[all_neighbors_list[0][chosen_neighbor_index]]) #ランダムに選ばれた隣人のペイオフ
+    # print(oppopnet_payoff)
+    own_payoff = sum(total_payoff_table[0])
+    # print(own_payoff)
+
+    #フェルミ関数
     beta = 10
     tmp = np.exp(-(oppopnet_payoff-own_payoff)*beta)
     # print(tmp)
     fermi_prob = 1/(1+tmp) #アップデートの確率
     print("フェルミ関数の値=", fermi_prob) 
-    # '''アップデート'''
-    randb = random.random()#サイコロはプレイヤーごとに振る。
+
+    print("ノード０のPlayer０のD確率（更新前）=", player_list[0].p_defect)
+    # print('選択された相手のD確率（更新前）=', player_list[chosen_player_index].p_defect)
+
+    # 戦略の更新
+    randb = random.random()
     #分岐
     if randb < fermi_prob:
-        # player_list[i].p_defect = present_p_defects[chosen_player_index] #これが混合戦略使っているときの同期更新
-        # player_list[i].p_defect = player_list[chosen_player_index].p_defect #これでplayer_list[0].p_defectを変更すると動的変更となるため、これはペンディング
-        """以下のif文のアップデートは357行目の０ないし１をランダムで与える初期化と同根の発想をアップデートで実装を試みたもの"""
-        if not player_list[i].p_defect == present_p_defects[chosen_player_index]:# ０を１にひっくり返すアップデートをする。357行と２つあわせて、それともこれだけで、どっちでいけるのか確認
-            if present_p_defects[chosen_player_index] == 0:
-                player_list[i].p_defect = 0
-            else:
-                player_list[i].p_defect = 1    
-        else:
-            pass      
+        player_list[0].p_defect = player_list[chosen_player_index].p_defect
+        # player_list[0].p_defectを変更する
     else:
         pass
+
     # 更新後の確認
-    print("ノード", i, "のPlayer", i, "のD確率（更新後）=",player_list[i].p_defect) 
+    print("ノード０のPlayer０のD確率（更新後）=",player_list[0].p_defect) 
+    # print('選ばれた相手のD確率（更新後）=',player_list[chosen_player_index].p_defect)
 
-# 更新後のp_defectsの確認
-post_p_defects = list()
-for i in range(len(player_list)):
-    post_p_defects.insert(i, player_list[i].p_defect)
-print("D確率（更新後）一覧=", post_p_defects)
+    作戦ここまで'''
 
-"""ここまでが一ラウンドやって更新までの処理"""
+    # # 上がわかれば、fermi関数から更新までをプレイヤークラスのメソッドで行いたい。未完成
+    # player_list[0].p_update(chosen_player_index, oppopnet_payoff, own_payoff, beta=10)
+    # print(player_list[0].p_defect)
 
-# def microwave(player_list):
-
-t1 = time.time()
-round_iter = 0
-while(round_iter < 5):
-    # round_iter = 1
-    for i in range(len(player_list)):
-        # print('test----', i)
-        for j in range(len(player_list)):
-            if eda_list[i][j] == 1:
-                # print('対戦リスト_', i, j)#自分と対戦相手を表示している。
-                #あるプレイヤーとあるプレイヤーの対戦を生成する。
-                a_game = SimpleGame(players=(player_list[i], player_list[j]), payoffmat=PAYOFFMAT)
-                #対戦を規定回数行なう。
-                # a_game.move_run2(game_iter=number_of_repetition, round_iter=round_iter) #この規定回数繰り返しとはラウンド一周中に同じ隣接ペアで何回繰り返すか、ラウンドは隣接ペアを一回りして終了する。
-                a_game.move_run(game_iter=number_of_repetition) #この規定回数繰り返しとはラウンド一周中に同じ隣接ペアで何回繰り返すか、ラウンドは隣接ペアを一回りして終了する。
-                #諸々の確認
-                print(a_game.history)#プレイの履歴を表示
-                # print(player_list[i].payoff_memory(a_game))#自分の利得を表示
-                # print(player_list[j].payoff_memory(a_game))#相手の利得を表示
-                # print(a_game.average_payoff())
-                # print(a_game.get_total_payoff())
-                # print(player_list[i].history_memory(a_game))
-                # print(player_list[i].payoff_memory(a_game))
-                tmp_total = a_game.get_total_payoff()
-                tmp_i = tmp_total.get(player_list[i])
-                # print(tmp)
-                tmp_j = tmp_total.get(player_list[j])
-                total_payoff_table[i][j] = tmp_i
-                total_payoff_table[j][i] = tmp_j
-
-    # round_iter+=1
-
+    #更新は同期更新で行なうとし、更新前のp_defectを格納する配列をつくる
     l = list()
     for i in range(len(player_list)):
         # print(player_list[i])
         # print(player_list[i].p_defect)
         # present_p_defects.append(player_list[i].p_defect)
         l.insert(i, player_list[i].p_defect)
-    present_p_defects = tuple(l)
-    print(round_iter,"D確率（更新前）一覧=",present_p_defects)
+    # present_p_defects = l
+    print(len(l))
+    # print("D確率（更新前）一覧=",present_p_defects)
+    with open("D確率一覧.csv", "w") as F:
+        writer = csv.writer(F)
+        writer.writerow(l)
+    F.close()
 
-    for i in range(len(player_list)):
-        print("ノード", i, "のPlayer", i, "の更新")
-        print("ノード", i, "のPlayer", i, "のD確率（更新前）=", player_list[i].p_defect)
-        # '''隣人の中から真似る相手の候補をランダムに選ぶ'''
-        x = random.sample(all_neighbors_list[i], 1)
-        chosen_player_index = int(x[0])
-      
-        print("ランダムに選ばれたプレイヤー", chosen_player_index)
-        # '''自分とランダムに選んだプレイヤーの利得の差分を計算する。'''
-        neighbor_index_ofchosenplayer = all_neighbors_list[i].index(x[0])#これは、当該の隣人だけの配列（全プレイヤーの配列ではない）の中で何番目かを返してくる。
-        oppopnet_payoff = sum(total_payoff_table[all_neighbors_list[i][neighbor_index_ofchosenplayer]]) #ランダムに選ばれた隣人の総利得
-        own_payoff = sum(total_payoff_table[i])#自分の総利得
-        # '''フェルミ関数'''
-        beta = 10
-        tmp = np.exp(-(oppopnet_payoff-own_payoff)*beta)
-        # print(tmp)
-        fermi_prob = 1/(1+tmp) #アップデートの確率
-        print("フェルミ関数の値=", fermi_prob) 
-        # '''アップデート'''
-        randb = random.random()#サイコロはプレイヤーごとに振る。
-        #分岐
-        # if randb < fermi_prob:
-        #     player_list[i].p_defect = present_p_defects[chosen_player_index]
-        #     # player_list[i].p_defect = player_list[chosen_player_index].p_defect
-        #     # ここでplayer_list[0].p_defectを変更すると動的変更となるため、これはペンディング
-        # else:
-        #     pass
-        if randb < fermi_prob:
-            # player_list[i].p_defect = present_p_defects[chosen_player_index] #これが混合戦略使っているときの同期更新
-            # player_list[i].p_defect = player_list[chosen_player_index].p_defect #これでplayer_list[0].p_defectを変更すると動的変更となるため、これはペンディング
-            """以下のif文のアップデートは357行目の０ないし１をランダムで与える初期化と同根の発想をアップデートで実装を試みたもの"""
-            if not player_list[i].p_defect == present_p_defects[chosen_player_index]:# ０を１にひっくり返すアップデートをする。357行と２つあわせて、それともこれだけで、どっちでいけるのか確認
-                if present_p_defects[chosen_player_index] == 0:
-                    player_list[i].p_defect = 0
+    # '''動的に変更されている。０が１を真似たとして、その０を３が真似るとして、３は１を真似た０の真似をしている。'''
+    # 上記の理由により、同期更新で行なう。ここで動的というのは私的定義だが、公式定義では非同期の一種らしい。
+    # for i in range(len(player_list)):
+    #     print("ノード", i, "のPlayer", i, "の更新")
+    #     print("ノード", i, "のPlayer", i, "のD確率（更新前）=", player_list[i].p_defect)
+    #     # '''隣人の中から真似る相手の候補をランダムに選ぶ'''
+    #     x = random.sample(all_neighbors_list[i], 1)
+    #     chosen_player_index = int(x[0])
+    #     print("ランダムに選ばれたプレイヤー", chosen_player_index)
+    #     # '''自分とランダムに選んだプレイヤーの利得の差分を計算する。'''
+    #     neighbor_index_ofchosenplayer = all_neighbors_list[i].index(x[0])#これは、当該の隣人だけの配列（全プレイヤーの配列ではない）の中で何番目かを返してくる。
+    #     oppopnet_payoff = sum(total_payoff_table[all_neighbors_list[i][neighbor_index_ofchosenplayer]]) #ランダムに選ばれた隣人の総利得
+    #     own_payoff = sum(total_payoff_table[i])#自分の総利得
+    #     # '''フェルミ関数'''
+    #     beta = 10
+    #     tmp = np.exp(-(oppopnet_payoff-own_payoff)*beta)
+    #     # print(tmp)
+    #     fermi_prob = 1/(1+tmp) #アップデートの確率
+    #     print("フェルミ関数の値=", fermi_prob) 
+    #     # '''アップデート'''
+    #     randb = random.random()#サイコロはプレイヤーごとに振る。
+    #     #分岐
+    #     if randb < fermi_prob:
+    #         # player_list[i].p_defect = present_p_defects[chosen_player_index] #これが混合戦略使っているときの同期更新
+    #         # player_list[i].p_defect = player_list[chosen_player_index].p_defect #これでplayer_list[0].p_defectを変更すると動的変更となるため、これはペンディング
+    #         """以下のif文のアップデートは357行目の０ないし１をランダムで与える初期化と同根の発想をアップデートで実装を試みたもの"""
+    #         if not player_list[i].p_defect == present_p_defects[chosen_player_index]:# ０を１にひっくり返すアップデートをする。357行と２つあわせて、それともこれだけで、どっちでいけるのか確認
+    #             if present_p_defects[chosen_player_index] == 0:
+    #                 player_list[i].p_defect = 0
+    #             else:
+    #                 player_list[i].p_defect = 1    
+    #         else:
+    #             pass      
+    #     else:
+    #         pass
+    #     # 更新後の確認
+    #     print("ノード", i, "のPlayer", i, "のD確率（更新後）=",player_list[i].p_defect) 
+
+    # # 更新後のp_defectsの確認
+    # post_p_defects = list()
+    # for i in range(len(player_list)):
+    #     post_p_defects.insert(i, player_list[i].p_defect)
+    # print("D確率（更新後）一覧=", post_p_defects)
+
+    """ここまでが一ラウンドやって更新までの処理"""
+
+    # def microwave(player_list):
+
+    t1 = time.time()
+    round_iter = 0
+    number_of_rounds = 10000
+    while(round_iter <  number_of_rounds):
+        # round_iter = 1
+        for i in range(len(player_list)):
+            # print('test----', i)
+            for j in range(len(player_list)):
+                if eda_list[i][j] == 1:
+                    # print('対戦リスト_', i, j)#自分と対戦相手を表示している。
+                    #あるプレイヤーとあるプレイヤーの対戦を生成する。
+                    a_game = SimpleGame(players=(player_list[i], player_list[j]), payoffmat=PAYOFFMAT)
+                    #対戦を規定回数行なう。
+                    # a_game.move_run2(game_iter=number_of_repetition, round_iter=round_iter) #この規定回数繰り返しとはラウンド一周中に同じ隣接ペアで何回繰り返すか、ラウンドは隣接ペアを一回りして終了する。
+                    a_game.move_run(game_iter=number_of_repetition) #この規定回数繰り返しとはラウンド一周中に同じ隣接ペアで何回繰り返すか、ラウンドは隣接ペアを一回りして終了する。
+                    #諸々の確認
+                    # print(a_game.history)#プレイの履歴を表示
+                    # print(player_list[i].payoff_memory(a_game))#自分の利得を表示
+                    # print(player_list[j].payoff_memory(a_game))#相手の利得を表示
+                    # print(a_game.average_payoff())
+                    # print(a_game.get_total_payoff())
+                    # print(player_list[i].history_memory(a_game))
+                    # print(player_list[i].payoff_memory(a_game))
+                    tmp_total = a_game.get_total_payoff()
+                    tmp_i = tmp_total.get(player_list[i])
+                    # print(tmp)
+                    tmp_j = tmp_total.get(player_list[j])
+                    total_payoff_table[i][j] = tmp_i
+                    total_payoff_table[j][i] = tmp_j
+
+        # round_iter+=1
+
+        l = list()
+        for i in range(len(player_list)):
+            # print(player_list[i])
+            # print(player_list[i].p_defect)
+            # present_p_defects.append(player_list[i].p_defect)
+            l.insert(i, player_list[i].p_defect)
+        present_p_defects = tuple(l)
+        # print(round_iter,"D確率（更新前）一覧=",present_p_defects)
+
+        for i in range(len(player_list)):
+            # print("ノード", i, "のPlayer", i, "の更新")
+            # print("ノード", i, "のPlayer", i, "のD確率（更新前）=", player_list[i].p_defect)
+            # '''隣人の中から真似る相手の候補をランダムに選ぶ'''
+            x = random.sample(all_neighbors_list[i], 1)
+            chosen_player_index = int(x[0])
+        
+            # print("ランダムに選ばれたプレイヤー", chosen_player_index)
+            # '''自分とランダムに選んだプレイヤーの利得の差分を計算する。'''
+            neighbor_index_ofchosenplayer = all_neighbors_list[i].index(x[0])#これは、当該の隣人だけの配列（全プレイヤーの配列ではない）の中で何番目かを返してくる。
+            oppopnet_payoff = sum(total_payoff_table[all_neighbors_list[i][neighbor_index_ofchosenplayer]]) #ランダムに選ばれた隣人の総利得
+            own_payoff = sum(total_payoff_table[i])#自分の総利得
+            # '''フェルミ関数'''
+            beta = 10
+            tmp = np.exp(-(oppopnet_payoff-own_payoff)*beta)
+            # print(tmp)
+            fermi_prob = 1/(1+tmp) #アップデートの確率
+            # print("フェルミ関数の値=", fermi_prob) 
+            # '''アップデート'''
+            randb = random.random()#サイコロはプレイヤーごとに振る。
+            #分岐
+            # if randb < fermi_prob:
+            #     player_list[i].p_defect = present_p_defects[chosen_player_index]
+            #     # player_list[i].p_defect = player_list[chosen_player_index].p_defect
+            #     # ここでplayer_list[0].p_defectを変更すると動的変更となるため、これはペンディング
+            # else:
+            #     pass
+            if randb < fermi_prob:
+                # player_list[i].p_defect = present_p_defects[chosen_player_index] #これが混合戦略使っているときの同期更新
+                # player_list[i].p_defect = player_list[chosen_player_index].p_defect #これでplayer_list[0].p_defectを変更すると動的変更となるため、これはペンディング
+                """以下のif文のアップデートは357行目の０ないし１をランダムで与える初期化と同根の発想をアップデートで実装を試みたもの"""
+                if not player_list[i].p_defect == present_p_defects[chosen_player_index]:# ０を１にひっくり返すアップデートをする。357行と２つあわせて、それともこれだけで、どっちでいけるのか確認
+                    if present_p_defects[chosen_player_index] == 0:
+                        player_list[i].p_defect = 0
+                    else:
+                        player_list[i].p_defect = 1    
                 else:
-                    player_list[i].p_defect = 1    
+                    pass      
             else:
-                pass      
-        else:
-            pass
-        # 更新後の確認
-        print("ノード", i, "のPlayer", i, "のD確率（更新後）=",player_list[i].p_defect) 
+                pass
+            # 更新後の確認
+            # print("ノード", i, "のPlayer", i, "のD確率（更新後）=",player_list[i].p_defect) 
 
-    # 更新後のp_defectsの確認
-    post_p_defects = list()
-    for i in range(len(player_list)):
-        post_p_defects.insert(i, player_list[i].p_defect)
-    print(round_iter,"D確率（更新後）一覧=", post_p_defects)
+        # 更新後のp_defectsの確認
+        post_p_defects = list()
+        for i in range(len(player_list)):
+            post_p_defects.insert(i, player_list[i].p_defect)
+        # print(round_iter,"D確率（更新後）一覧=", post_p_defects)
+        with open("D確率一覧.csv", "a") as F:
+            writer = csv.writer(F)
+            writer.writerow(post_p_defects)
+        F.close()
 
-    round_iter+=1
+        round_iter+=1
+        print("ラウンド数",round_iter)
+        t2 = time.time()
+        keika(t1,t2)
 
-t2 = time.time()
-keika(t1,t2)
+    t2 = time.time()
+    keika(t1,t2)
